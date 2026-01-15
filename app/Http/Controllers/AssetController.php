@@ -66,9 +66,13 @@ class AssetController extends Controller
             $validated['foto'] = $request->file('foto')->store('assets', 'public');
         }
 
-        // Generate QR Code
-        $qrCode = QrCode::format('png')->size(200)->generate($validated['kode_aset']);
-        $qrPath = 'qrcodes/' . $validated['kode_aset'] . '.png';
+        // Generate QR Code pakai SVG (no extension needed)
+        $qrCode = \QrCode::format('svg')
+            ->size(200)
+            ->errorCorrection('H')
+            ->generate($validated['kode_aset']);
+            
+        $qrPath = 'qrcodes/' . $validated['kode_aset'] . '.svg';
         Storage::disk('public')->put($qrPath, $qrCode);
         $validated['qr_code'] = $qrPath;
 
@@ -179,5 +183,18 @@ class AssetController extends Controller
     public function printSticker(Asset $asset)
     {
         return view('assets.sticker', compact('asset'));
+    }
+
+    // Download Berita Acara PDF
+    public function downloadBA(AssetHistory $history)
+    {
+        $asset = $history->asset;
+        
+        $pdf = \PDF::loadView('assets.berita-acara', compact('asset', 'history'));
+        
+        // Replace karakter / dengan - untuk nama file
+        $filename = 'BA_' . str_replace('/', '-', $history->nomor_ba) . '.pdf';
+        
+        return $pdf->download($filename);
     }
 }

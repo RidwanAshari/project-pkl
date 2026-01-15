@@ -132,7 +132,12 @@
                             <tbody>
                                 @foreach($asset->histories()->latest()->get() as $history)
                                 <tr>
-                                    <td>{{ $history->nomor_ba }}</td>
+                                    <td>
+                                        {{ $history->nomor_ba }}
+                                        <a href="{{ route('history.download-ba', $history) }}" class="btn btn-sm btn-danger ms-2" title="Download BA">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                    </td>
                                     <td>{{ $history->dari_pemegang ?? '-' }}</td>
                                     <td><strong>{{ $history->ke_pemegang }}</strong></td>
                                     <td>{{ $history->tanggal_serah_terima->format('d/m/Y') }}</td>
