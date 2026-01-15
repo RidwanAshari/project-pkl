@@ -148,7 +148,7 @@
             <div class="logo-text">Asset<span style="color:var(--primary)">Flow</span></div>
         </div>
         <div class="nav-menu">
-            <a href="/" class="nav-item active">🏠 Dashboard</a>
+            <a href="/dashboard" class="nav-item active">🏠 Dashboard</a>
             <a href="/data-aset" class="nav-item">📊 Data Aset</a>
             <a href="/history" class="nav-item">📅 History Peminjaman</a>
             <a href="/kategori" class="nav-item">📂 Kategori</a>
@@ -350,6 +350,10 @@
         }
         function formatRupiah(number) {
             return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(number);
+        }
+        // CEK LOGIN (Proteksi Halaman)
+            if (!localStorage.getItem('isLoggedIn')) {
+                window.location.href = '/';
         }
         window.addEventListener('DOMContentLoaded', updateDashboard);
     </script>

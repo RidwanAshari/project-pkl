@@ -32,7 +32,7 @@
     <nav class="sidebar">
         <div class="logo-area">📦 AssetFlow</div>
         <ul class="nav-menu">
-            <li class="nav-item"><a href="/">🏠 Dashboard</a></li>
+            <li class="nav-item"><a href="/dashboard">🏠 Dashboard</a></li>
             <li class="nav-item"><a href="/data-aset">📊 Data Aset</a></li>
             <li class="nav-item"><a href="/history" class="active">📅 History Peminjaman</a></li>
             <li class="nav-item"><a href="/kategori">📂 Kategori</a></li>

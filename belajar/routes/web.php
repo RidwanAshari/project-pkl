@@ -2,18 +2,9 @@
 
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-*/
-
-// 1. Halaman Login (Root)
+// 1. Halaman Utama = Login
 Route::get('/', function () {
-    // Kalau sudah login (simulasi session), lempar ke dashboard
-    if (session('isLoggedIn')) {
-        return redirect('/dashboard');
-    }
+    // Kita HAPUS pengecekan session('isLoggedIn') karena Javascript di browser yang mengaturnya
     return view('login');
 });
 
@@ -38,7 +29,16 @@ Route::get('/history', function () {
 });
 
 // 6. Halaman Kategori
-// ...
 Route::get('/kategori', function () {
     return view('kategori');
+});
+
+// Route untuk Menu Kategori
+Route::get('/kategori', function () {
+    return view('kategori');
+});
+
+// Route untuk Halaman Detail Kendaraan (Fitur Lengkap)
+Route::get('/kategori-kendaraan', function () {
+    return view('kategori-kendaraan');
 });

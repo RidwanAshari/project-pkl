@@ -242,9 +242,9 @@
             const errorBox = document.getElementById('errorMsg');
 
             // LOGIKA DUMMY (Bisa pakai admin ATAU admin@asset.com)
-            if ((loginId === 'admin' || loginId === 'admin@asset.com') && password === 'password') {
+            if ((loginId === 'admin' || loginId === 'admin@asset.com') && password === 'admin') {
                 localStorage.setItem('isLoggedIn', 'true');
-                window.location.href = '/';
+                window.location.href = '/dashboard';
             } else {
                 errorBox.style.display = 'block';
                 errorBox.innerText = 'Email/Username atau Password salah!';

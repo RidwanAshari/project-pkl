@@ -207,7 +207,7 @@
             <div class="logo-text">Asset<span style="color:var(--primary)">Flow</span></div>
         </div>
         <div class="nav-menu">
-            <a href="/" class="nav-item">🏠 Dashboard</a>
+            <a href="/dashboard" class="nav-item">🏠 Dashboard</a>
             <a href="/data-aset" class="nav-item active">📊 Data Aset</a>
             <a href="/history" class="nav-item">📅 History Peminjaman</a>
             <a href="/kategori" class="nav-item">📂 Kategori</a>
