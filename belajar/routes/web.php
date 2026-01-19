@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -8,37 +9,37 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-// 1. Halaman Login (Root)
+// halaman login (GET)
+Route::get('/login', [LoginController::class, 'showLoginForm'])
+    ->name('login')
+    ->middleware('guest');
+
+// proses login (POST)
+Route::post('/login', [LoginController::class, 'login'])
+    ->name('login.post')
+    ->middleware('guest');
+
+// logout
+Route::post('/logout', [LoginController::class, 'logout'])
+    ->name('logout')
+    ->middleware('auth');
+
+// dashboard (halaman utama setelah login)
 Route::get('/', function () {
-    // Kalau sudah login (simulasi session), lempar ke dashboard
-    if (session('isLoggedIn')) {
-        return redirect('/dashboard');
-    }
-    return view('login');
-});
+    return view('dashboard');   // resources/views/dashboard.blade.php
+})->middleware('auth')->name('dashboard');
 
-// 2. Halaman Login Eksplisit
-Route::get('/login', function () {
-    return view('login');
-});
-
-// 3. Halaman Dashboard
-Route::get('/dashboard', function () {
-    return view('welcome');
-});
-
-// 4. Halaman Data Aset
+// halaman Data Aset
 Route::get('/data-aset', function () {
     return view('assets.index');
-});
+})->middleware('auth');
 
-// 5. Halaman History
+// halaman History
 Route::get('/history', function () {
     return view('history');
-});
+})->middleware('auth');
 
-// 6. Halaman Kategori
-// ...
+// halaman Kategori
 Route::get('/kategori', function () {
     return view('kategori');
-});
+})->middleware('auth');
