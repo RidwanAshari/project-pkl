@@ -108,9 +108,40 @@ class VehicleController extends Controller
             $validated['file_nota'] = $request->file('file_nota')->store('vehicle-maintenances', 'public');
         }
 
-        VehicleMaintenance::create($validated);
+        $maintenance = VehicleMaintenance::create($validated);
+
+        // Generate Surat Pengantar untuk Service Rutin, Perbaikan, Penggantian
+        if (in_array($validated['jenis_servis'], ['Service Rutin', 'Perbaikan', 'Penggantian'])) {
+            $this->generateSuratPengantar($asset, $maintenance);
+        }
 
         return redirect()->route('vehicles.show', $asset)->with('success', 'Data pemeliharaan berhasil ditambahkan!');
+    }
+
+    // Generate Surat Pengantar PDF
+    private function generateSuratPengantar($asset, $maintenance)
+    {
+        $vehicleDetail = $asset->vehicleDetail;
+        
+        $pdf = \PDF::loadView('vehicles.surat-pengantar', compact('asset', 'maintenance', 'vehicleDetail'));
+        
+        $filename = 'surat-pengantar-' . $asset->kode_aset . '-' . $maintenance->id . '.pdf';
+        $path = 'surat-pengantar/' . $filename;
+        
+        Storage::disk('public')->put($path, $pdf->output());
+        
+        // Update maintenance dengan file surat
+        $maintenance->update(['file_surat_pengantar' => $path]);
+    }
+
+    // Download Surat Pengantar
+    public function downloadSuratPengantar(Asset $asset, VehicleMaintenance $maintenance)
+    {
+        if (!$maintenance->file_surat_pengantar) {
+            return redirect()->back()->with('error', 'Surat pengantar tidak tersedia!');
+        }
+
+        return response()->download(storage_path('app/public/' . $maintenance->file_surat_pengantar));
     }
 
     // Delete maintenance
@@ -136,9 +167,10 @@ class VehicleController extends Controller
         // Data per bulan tahun ini
         $year = request('year', date('Y'));
         
+        // SQLite compatible - pakai strftime
         $monthlyData = VehicleMaintenance::where('asset_id', $asset->id)
             ->whereYear('tanggal', $year)
-            ->selectRaw('MONTH(tanggal) as bulan, jenis_servis, SUM(biaya) as total')
+            ->selectRaw("CAST(strftime('%m', tanggal) AS INTEGER) as bulan, jenis_servis, SUM(biaya) as total")
             ->groupBy('bulan', 'jenis_servis')
             ->get();
 

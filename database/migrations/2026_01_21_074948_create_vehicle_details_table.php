@@ -14,9 +14,11 @@ return new class extends Migration
             
             // Identitas Pemilik/Pengguna
             $table->string('nama_pemilik')->nullable();
+            $table->string('jabatan')->nullable();
             $table->text('alamat')->nullable();
             
             // Spesifikasi Kendaraan
+            $table->string('nomor_plat')->nullable();
             $table->string('model')->nullable();
             $table->integer('tahun_pembuatan')->nullable();
             $table->string('isi_silinder')->nullable();

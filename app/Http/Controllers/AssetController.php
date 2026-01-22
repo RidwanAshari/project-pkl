@@ -58,7 +58,29 @@ class AssetController extends Controller
             'lokasi' => 'required',
             'pemegang_saat_ini' => 'nullable',
             'keterangan' => 'nullable',
-            'foto' => 'nullable|image|max:2048'
+            'foto' => 'nullable|image|max:2048',
+            
+            // Vehicle details (jika kategori kendaraan)
+            'nama_pemilik' => 'nullable|string',
+            'jabatan' => 'nullable|string',
+            'alamat' => 'nullable|string',
+            'nomor_plat' => 'nullable|string',
+            'model' => 'nullable|string',
+            'tahun_pembuatan' => 'nullable|integer',
+            'isi_silinder' => 'nullable|string',
+            'nomor_rangka' => 'nullable|string',
+            'nomor_mesin' => 'nullable|string',
+            'warna' => 'nullable|string',
+            'bahan_bakar' => 'nullable|string',
+            'warna_tnkb' => 'nullable|string',
+            'tahun_registrasi' => 'nullable|integer',
+            'nomor_bpkb' => 'nullable|string',
+            'tanggal_berlaku' => 'nullable|date',
+            'bulan_berlaku' => 'nullable|string',
+            'tahun_berlaku' => 'nullable|string',
+            'berat' => 'nullable|numeric',
+            'sumbu' => 'nullable|integer',
+            'penumpang' => 'nullable|integer',
         ]);
 
         // Upload foto
@@ -66,17 +88,41 @@ class AssetController extends Controller
             $validated['foto'] = $request->file('foto')->store('assets', 'public');
         }
 
-        // Generate QR Code pakai SVG (no extension needed)
+        // Generate QR Code pakai SVG - URL mengarah ke route qr.redirect
+        $qrUrl = url('qr/' . $validated['kode_aset']);
         $qrCode = \QrCode::format('svg')
             ->size(200)
             ->errorCorrection('H')
-            ->generate($validated['kode_aset']);
+            ->generate($qrUrl);
             
         $qrPath = 'qrcodes/' . $validated['kode_aset'] . '.svg';
         Storage::disk('public')->put($qrPath, $qrCode);
         $validated['qr_code'] = $qrPath;
 
-        $asset = Asset::create($validated);
+        // Buat aset
+        $assetData = collect($validated)->only([
+            'kode_aset', 'nama_aset', 'kategori', 'merk', 'tipe', 
+            'tahun_perolehan', 'nilai_perolehan', 'kondisi', 'lokasi', 
+            'pemegang_saat_ini', 'keterangan', 'foto', 'qr_code'
+        ])->toArray();
+        
+        $asset = Asset::create($assetData);
+
+        // Jika kategori kendaraan, simpan detail kendaraan
+        if ($validated['kategori'] === 'Kendaraan') {
+            $vehicleData = collect($validated)->only([
+                'nama_pemilik', 'jabatan', 'alamat', 'nomor_plat', 'model', 
+                'tahun_pembuatan', 'isi_silinder', 'nomor_rangka', 'nomor_mesin', 
+                'warna', 'bahan_bakar', 'warna_tnkb', 'tahun_registrasi', 
+                'nomor_bpkb', 'tanggal_berlaku', 'bulan_berlaku', 'tahun_berlaku', 
+                'berat', 'sumbu', 'penumpang'
+            ])->filter()->toArray();
+            
+            if (!empty($vehicleData)) {
+                $vehicleData['asset_id'] = $asset->id;
+                \App\Models\VehicleDetail::create($vehicleData);
+            }
+        }
 
         // Buat histori awal jika ada pemegang
         if ($request->filled('pemegang_saat_ini')) {
@@ -183,6 +229,20 @@ class AssetController extends Controller
     public function printSticker(Asset $asset)
     {
         return view('assets.sticker', compact('asset'));
+    }
+
+    // QR Code Redirect - untuk scan barcode
+    public function qrRedirect($kode_aset)
+    {
+        $asset = Asset::where('kode_aset', $kode_aset)->firstOrFail();
+        
+        // Jika kendaraan, redirect ke detail kendaraan
+        if ($asset->kategori === 'Kendaraan') {
+            return redirect()->route('vehicles.show', $asset);
+        }
+        
+        // Selain kendaraan, redirect ke detail aset biasa
+        return redirect()->route('assets.show', $asset);
     }
 
     // Download Berita Acara PDF

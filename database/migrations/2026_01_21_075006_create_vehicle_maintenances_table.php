@@ -30,6 +30,7 @@ return new class extends Migration
             
             // Bukti/Nota
             $table->string('file_nota')->nullable();
+            $table->string('file_surat_pengantar')->nullable();
             
             $table->timestamps();
         });

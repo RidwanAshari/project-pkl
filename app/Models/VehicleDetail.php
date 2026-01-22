@@ -12,7 +12,9 @@ class VehicleDetail extends Model
     protected $fillable = [
         'asset_id',
         'nama_pemilik',
+        'jabatan',
         'alamat',
+        'nomor_plat',
         'model',
         'tahun_pembuatan',
         'isi_silinder',

@@ -5,7 +5,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VehicleController; 
 use Illuminate\Support\Facades\Route;
 
 // Dashboard Route
@@ -43,3 +43,7 @@ Route::get('vehicles/{asset}/create-maintenance', [VehicleController::class, 'cr
 Route::post('vehicles/{asset}/store-maintenance', [VehicleController::class, 'storeMaintenance'])->name('vehicles.store-maintenance');
 Route::delete('vehicles/{asset}/maintenance/{maintenance}', [VehicleController::class, 'deleteMaintenance'])->name('vehicles.delete-maintenance');
 Route::get('vehicles/{asset}/report-cost', [VehicleController::class, 'reportCost'])->name('vehicles.report-cost');
+Route::get('vehicles/{asset}/maintenance/{maintenance}/download-surat', [VehicleController::class, 'downloadSuratPengantar'])->name('vehicles.download-surat');
+
+// QR Code Redirect - untuk scan QR Code
+Route::get('qr/{kode_aset}', [AssetController::class, 'qrRedirect'])->name('qr.redirect');

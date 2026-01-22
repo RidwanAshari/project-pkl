@@ -20,7 +20,8 @@ class VehicleMaintenance extends Model
         'keterangan',
         'bengkel',
         'biaya',
-        'file_nota'
+        'file_nota',
+        'file_surat_pengantar'
     ];
 
     protected $casts = [

@@ -19,11 +19,15 @@
 
                 <h5 class="text-primary mb-3">Identitas Pemilik/Pengguna</h5>
                 <div class="row mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Nama Pemilik/Pengguna</label>
                         <input type="text" name="nama_pemilik" class="form-control" value="{{ old('nama_pemilik', $vehicleDetail->nama_pemilik) }}">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+                        <label class="form-label">Jabatan</label>
+                        <input type="text" name="jabatan" class="form-control" value="{{ old('jabatan', $vehicleDetail->jabatan) }}">
+                    </div>
+                    <div class="col-md-4">
                         <label class="form-label">Alamat</label>
                         <textarea name="alamat" class="form-control" rows="1">{{ old('alamat', $vehicleDetail->alamat) }}</textarea>
                     </div>
@@ -32,10 +36,17 @@
                 <hr>
                 <h5 class="text-primary mb-3">Spesifikasi Kendaraan</h5>
                 <div class="row mb-3">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Nomor Plat</label>
+                        <input type="text" name="nomor_plat" class="form-control" placeholder="Contoh: B 1234 XYZ" value="{{ old('nomor_plat', $vehicleDetail->nomor_plat) }}">
+                    </div>
+                    <div class="col-md-6">
                         <label class="form-label">Model</label>
                         <input type="text" name="model" class="form-control" value="{{ old('model', $vehicleDetail->model) }}">
                     </div>
+                </div>
+
+                <div class="row mb-3">
                     <div class="col-md-4">
                         <label class="form-label">Tahun Pembuatan</label>
                         <input type="number" name="tahun_pembuatan" class="form-control" value="{{ old('tahun_pembuatan', $vehicleDetail->tahun_pembuatan) }}">
