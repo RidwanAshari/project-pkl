@@ -246,6 +246,7 @@ class AssetController extends Controller
                 'keterangan' => $request->filled('keterangan') 
                     ? $request->keterangan 
                     : 'Penerimaan awal aset ' . $asset->nama_aset,
+                'created_by' => auth()->id()
             ]);
         }
 
@@ -391,8 +392,11 @@ class AssetController extends Controller
 
     public function destroy(Asset $asset)
     {
-        // HAPUS SEMUA HISTORI TERLEBIH DAHULU
-        $asset->histories()->delete();
+        // Check if asset has history
+        if ($asset->histories()->count() > 0) {
+            return redirect()->back()
+                ->with('error', 'Tidak dapat menghapus aset yang memiliki riwayat transaksi. Silahkan hapus riwayat terlebih dahulu.');
+        }
 
         // Hapus foto
         if ($asset->foto && Storage::disk('public')->exists($asset->foto)) {
@@ -432,6 +436,7 @@ class AssetController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'ke_pemegang' => 'required|max:100',
+            'departemen_baru' => 'nullable|max:100',
             'lokasi_baru' => 'nullable|max:200',
             'tanggal_serah_terima' => 'required|date|before_or_equal:' . now()->format('Y-m-d'),
             'kondisi_baru' => 'nullable|in:' . implode(',', array_keys($this->getKondisiOptions())),
@@ -446,56 +451,39 @@ class AssetController extends Controller
 
         $validated = $validator->validated();
 
-        // Buat data histori
-        $historyData = [
+        // Buat histori baru
+        $history = AssetHistory::create([
             'asset_id' => $asset->id,
             'dari_pemegang' => $asset->pemegang_saat_ini,
             'ke_pemegang' => $validated['ke_pemegang'],
-            'lokasi_lama' => $asset->lokasi,
-            'kondisi_lama' => $asset->kondisi,
             'departemen_lama' => $asset->departemen,
+            'departemen_baru' => $validated['departemen_baru'] ?? $asset->departemen,
+            'lokasi_lama' => $asset->lokasi,
+            'lokasi_baru' => $validated['lokasi_baru'] ?? $asset->lokasi,
+            'kondisi_lama' => $asset->kondisi,
+            'kondisi_baru' => $validated['kondisi_baru'] ?? $asset->kondisi,
             'tanggal_serah_terima' => $validated['tanggal_serah_terima'],
             'nomor_ba' => AssetHistory::generateNomorBA(),
             'jenis_perubahan' => 'Transfer Pemegang',
-            'keterangan' => $validated['keterangan']
-        ];
-
-        // Hanya tambah jika ada nilainya
-        if (isset($validated['lokasi_baru'])) {
-            $historyData['lokasi_baru'] = $validated['lokasi_baru'];
-        } else {
-            $historyData['lokasi_baru'] = $asset->lokasi;
-        }
-
-        if (isset($validated['kondisi_baru'])) {
-            $historyData['kondisi_baru'] = $validated['kondisi_baru'];
-        } else {
-            $historyData['kondisi_baru'] = $asset->kondisi;
-        }
-
-        if (isset($validated['departemen_baru'])) {
-            $historyData['departemen_baru'] = $validated['departemen_baru'];
-        } else {
-            $historyData['departemen_baru'] = $asset->departemen;
-        }
-
-        $history = AssetHistory::create($historyData);
+            'keterangan' => $validated['keterangan'],
+            'created_by' => auth()->id()
+        ]);
 
         // Update data aset
         $updateData = [
             'pemegang_saat_ini' => $validated['ke_pemegang']
         ];
 
-        if (isset($validated['lokasi_baru']) && $validated['lokasi_baru']) {
+        if ($validated['departemen_baru']) {
+            $updateData['departemen'] = $validated['departemen_baru'];
+        }
+
+        if ($validated['lokasi_baru']) {
             $updateData['lokasi'] = $validated['lokasi_baru'];
         }
 
-        if (isset($validated['kondisi_baru']) && $validated['kondisi_baru']) {
+        if ($validated['kondisi_baru']) {
             $updateData['kondisi'] = $validated['kondisi_baru'];
-        }
-
-        if (isset($validated['departemen_baru']) && $validated['departemen_baru']) {
-            $updateData['departemen'] = $validated['departemen_baru'];
         }
 
         $asset->update($updateData);

@@ -152,7 +152,7 @@
                                     <td>{{ $history->nomor_ba }}</td>
                                     <td>{{ $history->dari_pemegang ?? '-' }}</td>
                                     <td><strong>{{ $history->ke_pemegang }}</strong></td>
-                                    <td>{{ $history->tanggal_serah_terima->format('d/m/Y') }}</td>
+                                  <td>{{ \Carbon\Carbon::parse($history->tanggal_serah_terima)->format('d/m/Y') }}</td>
                                     <td>{{ $history->keterangan ?? '-' }}</td>
                                     <td>
                                         {{-- PERBAIKAN: Gunakan route assets.download-ba yang sudah ada --}}

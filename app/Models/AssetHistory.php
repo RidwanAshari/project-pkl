@@ -13,21 +13,18 @@ class AssetHistory extends Model
         'asset_id',
         'dari_pemegang',
         'ke_pemegang',
-        'departemen_lama',
-        'departemen_baru',
         'lokasi_lama',
         'lokasi_baru',
         'kondisi_lama',
         'kondisi_baru',
+        'departemen_lama',
+        'departemen_baru',
         'tanggal_serah_terima',
         'nomor_ba',
         'jenis_perubahan',
+        'file_ba',
         'keterangan',
-        'created_by' // Ini adalah foreign key ke users
-    ];
-
-    protected $casts = [
-        'tanggal_serah_terima' => 'datetime',
+        'created_by'
     ];
 
     // Relasi ke asset
@@ -37,72 +34,36 @@ class AssetHistory extends Model
     }
 
     // Relasi ke user yang membuat histori (created_by)
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // Relasi ke user (jika ada relasi langsung)
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    // Generate nomor BA otomatis - VERSI LEBIH AMAN
-    public static function generateNomorBA()
+    // Accessor untuk nama creator
+    public function getCreatorNameAttribute()
     {
-        $year = date('Y');
-        $month = date('m');
-        
-        // Cari nomor BA terakhir bulan ini
-        $lastBA = self::whereYear('created_at', $year)
-                      ->whereMonth('created_at', $month)
-                      ->orderBy('id', 'desc')
-                      ->first();
-        
-        if ($lastBA && $lastBA->nomor_ba) {
-            try {
-                // Ekstrak angka dari nomor BA terakhir
-                $parts = explode('/', $lastBA->nomor_ba);
-                $lastNumber = (int) end($parts);
-                $number = $lastNumber + 1;
-            } catch (\Exception $e) {
-                // Jika format tidak sesuai, mulai dari 1
-                $number = 1;
-            }
-        } else {
-            $number = 1;
-        }
-        
-        return sprintf('BA/%s/%s/%04d', $month, $year, $number);
-    }
-    
-    // Method untuk mengambil nama pembuat (dengan fallback)
-    public function getCreatedByNameAttribute()
-    {
-        if ($this->user) {
-            return $this->user->name;
-        }
-        
         if ($this->created_by) {
-            // Coba load user jika belum diload
             $user = User::find($this->created_by);
-            if ($user) {
-                return $user->name;
-            }
-            return "User #{$this->created_by}";
+            return $user ? $user->name : "User #{$this->created_by}";
         }
-        
         return 'System';
     }
-    
-    // Boot method untuk set created_by otomatis
-    protected static function boot()
+
+    // Method untuk generate nomor BA
+    public static function generateNomorBA()
     {
-        parent::boot();
+        $month = date('m');
+        $year = date('Y');
+        $count = self::whereYear('created_at', $year)
+                    ->whereMonth('created_at', $month)
+                    ->count() + 1;
         
-        static::creating(function ($model) {
-            if (empty($model->nomor_ba)) {
-                $model->nomor_ba = self::generateNomorBA();
-            }
-            
-            if (empty($model->created_by) && auth()->check()) {
-                $model->created_by = auth()->id();
-            }
-        });
+        return "BA/{$month}/{$year}/" . str_pad($count, 4, '0', STR_PAD_LEFT);
     }
 }
