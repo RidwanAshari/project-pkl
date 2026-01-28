@@ -7,11 +7,22 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Detail Aset</h1>
         <div>
+            {{-- HAPUS atau KOMENTARI bagian ini jika route vehicles.show tidak ada --}}
+            {{--
             @if($asset->kategori == 'Kendaraan')
             <a href="{{ route('vehicles.show', $asset) }}" class="btn btn-info">
                 <i class="fas fa-car"></i> Detail Kendaraan
             </a>
             @endif
+            --}}
+            
+            {{-- Atau ganti dengan route yang ada --}}
+            @if($asset->kategori == 'Kendaraan')
+            <a href="{{ route('assets.show', $asset) }}" class="btn btn-info">
+                <i class="fas fa-car"></i> Detail Kendaraan
+            </a>
+            @endif
+            
             <a href="{{ route('assets.sticker', $asset) }}" class="btn btn-success" target="_blank">
                 <i class="fas fa-print"></i> Cetak Stiker
             </a>
@@ -132,21 +143,26 @@
                                     <th>Ke</th>
                                     <th>Tanggal</th>
                                     <th>Keterangan</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($asset->histories()->latest()->get() as $history)
                                 <tr>
-                                    <td>
-                                        {{ $history->nomor_ba }}
-                                        <a href="{{ route('history.download-ba', $history) }}" class="btn btn-sm btn-danger ms-2" title="Download BA">
-                                            <i class="fas fa-file-pdf"></i>
-                                        </a>
-                                    </td>
+                                    <td>{{ $history->nomor_ba }}</td>
                                     <td>{{ $history->dari_pemegang ?? '-' }}</td>
                                     <td><strong>{{ $history->ke_pemegang }}</strong></td>
                                     <td>{{ $history->tanggal_serah_terima->format('d/m/Y') }}</td>
                                     <td>{{ $history->keterangan ?? '-' }}</td>
+                                    <td>
+                                        {{-- PERBAIKAN: Gunakan route assets.download-ba yang sudah ada --}}
+                                        <a href="{{ route('assets.download-ba', $history->id) }}" 
+                                           class="btn btn-sm btn-danger" 
+                                           title="Download BA"
+                                           target="_blank">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </a>
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -168,7 +184,7 @@
                 </div>
                 <div class="card-body text-center">
                     @if($asset->foto)
-                        <img src="{{ asset('storage/' . $asset->foto) }}" alt="Foto Aset" class="img-fluid rounded mb-3">
+                        <img src="{{ asset('storage/' . $asset->foto) }}" alt="Foto Aset" class="img-fluid rounded mb-3" style="max-height: 300px;">
                     @else
                         <div class="bg-light p-5 rounded">
                             <i class="fas fa-image fa-3x text-muted"></i>
@@ -187,10 +203,16 @@
                     @if($asset->qr_code)
                         <img src="{{ asset('storage/' . $asset->qr_code) }}" alt="QR Code" class="img-fluid" style="max-width: 200px;">
                         <p class="text-muted small mt-2">Scan untuk melihat detail aset</p>
+                        <a href="{{ route('assets.generate-qr', $asset) }}" class="btn btn-sm btn-outline-primary mt-2">
+                            <i class="fas fa-redo"></i> Generate Ulang QR
+                        </a>
                     @else
                         <div class="bg-light p-4 rounded">
                             <i class="fas fa-qrcode fa-3x text-muted"></i>
                             <p class="text-muted mt-2">QR Code tidak tersedia</p>
+                            <a href="{{ route('assets.generate-qr', $asset) }}" class="btn btn-sm btn-primary mt-2">
+                                <i class="fas fa-qrcode"></i> Generate QR Code
+                            </a>
                         </div>
                     @endif
                 </div>
@@ -220,11 +242,12 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Tanggal Serah Terima <span class="text-danger">*</span></label>
-                        <input type="date" name="tanggal_serah_terima" class="form-control" value="{{ date('Y-m-d') }}" required>
+                        <input type="date" name="tanggal_serah_terima" class="form-control" value="{{ date('Y-m-d') }}" required max="{{ date('Y-m-d') }}">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Keterangan</label>
-                        <textarea name="keterangan" class="form-control" rows="3"></textarea>
+                        <label class="form-label">Keterangan <span class="text-danger">*</span></label>
+                        <textarea name="keterangan" class="form-control" rows="3" required placeholder="Contoh: Serah terima dari bagian gudang ke marketing"></textarea>
+                        <small class="text-muted">Minimal 10 karakter</small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -235,4 +258,23 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    // Validasi form transfer
+    document.addEventListener('DOMContentLoaded', function() {
+        const transferForm = document.querySelector('form[action*="transfer"]');
+        if (transferForm) {
+            transferForm.addEventListener('submit', function(e) {
+                const keterangan = this.querySelector('textarea[name="keterangan"]');
+                if (keterangan.value.trim().length < 10) {
+                    e.preventDefault();
+                    alert('Keterangan harus minimal 10 karakter');
+                    keterangan.focus();
+                }
+            });
+        }
+    });
+</script>
 @endsection

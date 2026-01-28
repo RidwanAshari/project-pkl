@@ -6,7 +6,8 @@
 <div class="container-fluid px-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Laporan Aset</h1>
-        <a href="{{ route('reports.export-pdf') }}" class="btn btn-danger">
+        {{-- PERBAIKAN: Ganti reports.export-pdf dengan reports.pdf --}}
+        <a href="{{ route('reports.pdf') }}" class="btn btn-danger">
             <i class="fas fa-file-pdf"></i> Export PDF Lengkap
         </a>
     </div>

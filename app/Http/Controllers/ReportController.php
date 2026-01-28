@@ -4,60 +4,107 @@ namespace App\Http\Controllers;
 
 use App\Models\Asset;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ReportController extends Controller
 {
     public function index()
     {
-        return view('reports.index');
+        $totalAssets = Asset::count();
+        $totalValue = Asset::sum('nilai_perolehan');
+        $goodAssets = Asset::where('kondisi', 'Baik')->count();
+        $categoriesCount = Asset::distinct('kategori')->count('kategori');
+        
+        return view('reports.index', compact(
+            'totalAssets', 
+            'totalValue', 
+            'goodAssets', 
+            'categoriesCount'
+        ));
     }
 
-    // Laporan Per Kategori
     public function byCategory()
     {
-        $data = Asset::select('kategori', DB::raw('count(*) as jumlah'), DB::raw('sum(nilai_perolehan) as total_nilai'))
+        $assets = Asset::withCount('histories')
             ->groupBy('kategori')
+            ->selectRaw('kategori, count(*) as total, sum(nilai_perolehan) as total_value')
             ->get();
-
-        return view('reports.by-category', compact('data'));
+            
+        return view('reports.by-category', compact('assets'));
     }
 
-    // Laporan Per Kondisi
     public function byCondition()
     {
-        $data = Asset::select('kondisi', DB::raw('count(*) as jumlah'), DB::raw('sum(nilai_perolehan) as total_nilai'))
-            ->groupBy('kondisi')
+        $assets = Asset::groupBy('kondisi')
+            ->selectRaw('kondisi, count(*) as total, sum(nilai_perolehan) as total_value')
             ->get();
-
-        return view('reports.by-condition', compact('data'));
+            
+        return view('reports.by-condition', compact('assets'));
     }
 
-    // Laporan Per Pemegang
     public function byHolder()
     {
-        $data = Asset::select('pemegang_saat_ini', DB::raw('count(*) as jumlah'), DB::raw('sum(nilai_perolehan) as total_nilai'))
-            ->whereNotNull('pemegang_saat_ini')
+        $assets = Asset::whereNotNull('pemegang_saat_ini')
             ->groupBy('pemegang_saat_ini')
+            ->selectRaw('pemegang_saat_ini, count(*) as total, sum(nilai_perolehan) as total_value')
             ->get();
-
-        return view('reports.by-holder', compact('data'));
+            
+        return view('reports.by-holder', compact('assets'));
     }
 
-    // Export PDF Laporan Lengkap
-    public function exportPDF()
+    public function pdf(Request $request)
     {
-        $assets = Asset::all();
-        $totalNilai = Asset::sum('nilai_perolehan');
-        $byCategory = Asset::select('kategori', DB::raw('count(*) as jumlah'))
-            ->groupBy('kategori')
-            ->get();
-        $byCondition = Asset::select('kondisi', DB::raw('count(*) as jumlah'))
-            ->groupBy('kondisi')
-            ->get();
-
-        $pdf = \PDF::loadView('reports.pdf', compact('assets', 'totalNilai', 'byCategory', 'byCondition'));
+        // Query dengan filter
+        $query = Asset::query();
         
-        return $pdf->download('Laporan_Aset_' . date('Y-m-d') . '.pdf');
+        if ($request->filled('kategori')) {
+            $query->where('kategori', $request->kategori);
+        }
+        
+        if ($request->filled('kondisi')) {
+            $query->where('kondisi', $request->kondisi);
+        }
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('kode_aset', 'like', "%{$search}%")
+                  ->orWhere('nama_aset', 'like', "%{$search}%");
+            });
+        }
+        
+        $assets = $query->get();
+        
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.pdf', compact('assets'));
+        
+        return $pdf->download('laporan-aset-' . date('Y-m-d') . '.pdf');
+    }
+
+    public function export(Request $request)
+    {
+        // Query yang sama seperti di pdf()
+        $query = Asset::query();
+        
+        if ($request->filled('kategori')) {
+            $query->where('kategori', $request->kategori);
+        }
+        
+        if ($request->filled('kondisi')) {
+            $query->where('kondisi', $request->kondisi);
+        }
+        
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('kode_aset', 'like', "%{$search}%")
+                  ->orWhere('nama_aset', 'like', "%{$search}%");
+            });
+        }
+        
+        $assets = $query->get();
+        
+        // Implement Excel export here
+        // return Excel::download(new AssetsExport($assets), 'assets.xlsx');
+        
+        return redirect()->back()->with('info', 'Export feature coming soon');
     }
 }

@@ -1,119 +1,172 @@
 @extends('layouts.app')
 
-@section('title', 'Profil')
+@section('title', 'Profil Saya')
+@section('page-header', 'Profil Saya')
+
+@section('page-actions')
+    <a href="{{ route('profile.edit') }}" class="btn btn-primary">
+        <i class="fas fa-edit me-2"></i> Edit Profil
+    </a>
+@endsection
 
 @section('content')
-<div class="container-fluid px-4">
-    <h1 class="h3 mb-4 text-gray-800">Profil Pengguna</h1>
-
-    <div class="row">
-        <!-- Informasi Profil -->
-        <div class="col-lg-4 mb-4">
-            <div class="card shadow">
-                <div class="card-body text-center">
-                    <div class="mb-3">
-                        <i class="fas fa-user-circle fa-5x text-primary"></i>
-                    </div>
-                    <h4>{{ $profile['name'] }}</h4>
-                    <p class="text-muted">{{ $profile['role'] }}</p>
-                    <hr>
-                    <div class="text-start">
-                        <p class="mb-2">
-                            <i class="fas fa-envelope text-primary"></i>
-                            <strong class="ms-2">Email:</strong><br>
-                            <span class="ms-4">{{ $profile['email'] }}</span>
-                        </p>
-                        <p class="mb-0">
-                            <i class="fas fa-calendar text-primary"></i>
-                            <strong class="ms-2">Bergabung Sejak:</strong><br>
-                            <span class="ms-4">{{ date('d F Y', strtotime($profile['joined'])) }}</span>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Aktivitas & Statistik -->
-        <div class="col-lg-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Statistik Aktivitas</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-4">
-                            <div class="border-start border-primary border-4 ps-3">
-                                <h3 class="text-primary">{{ \App\Models\Asset::count() }}</h3>
-                                <p class="text-muted mb-0">Total Aset Dikelola</p>
-                            </div>
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Informasi Profil
                         </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="border-start border-success border-4 ps-3">
-                                <h3 class="text-success">{{ \App\Models\AssetHistory::count() }}</h3>
-                                <p class="text-muted mb-0">Total Transfer Aset</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="border-start border-info border-4 ps-3">
-                                <h3 class="text-info">Rp {{ number_format(\App\Models\Asset::sum('nilai_perolehan'), 0, ',', '.') }}</h3>
-                                <p class="text-muted mb-0">Total Nilai Aset</p>
-                            </div>
-                        </div>
-                        <div class="col-md-6 mb-4">
-                            <div class="border-start border-warning border-4 ps-3">
-                                <h3 class="text-warning">{{ \App\Models\Asset::whereIn('kondisi', ['Rusak Ringan', 'Rusak Berat'])->count() }}</h3>
-                                <p class="text-muted mb-0">Aset Perlu Maintenance</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Aktivitas Terbaru -->
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Aktivitas Terbaru</h6>
-                </div>
-                <div class="card-body">
-                    <div class="timeline">
-                        @php
-                            $recentHistories = \App\Models\AssetHistory::with('asset')->latest()->take(5)->get();
-                        @endphp
-
-                        @if($recentHistories->count() > 0)
-                            @foreach($recentHistories as $history)
-                            <div class="mb-3 pb-3 border-bottom">
-                                <div class="d-flex">
-                                    <div class="me-3">
-                                        <i class="fas fa-exchange-alt text-primary"></i>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <div class="text-center mb-4">
+                                    <div class="user-avatar mx-auto" style="width: 120px; height: 120px; font-size: 48px;">
+                                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                     </div>
-                                    <div class="flex-grow-1">
-                                        <p class="mb-1">
-                                            <strong>Transfer Aset:</strong> {{ $history->asset->nama_aset }}
-                                        </p>
-                                        <p class="text-muted small mb-1">
-                                            Dari: {{ $history->dari_pemegang ?? '-' }} → Ke: {{ $history->ke_pemegang }}
-                                        </p>
-                                        <p class="text-muted small mb-0">
-                                            <i class="fas fa-clock"></i> {{ $history->created_at->diffForHumans() }}
-                                        </p>
-                                    </div>
+                                    <h5 class="mt-3">{{ Auth::user()->name }}</h5>
+                                    <span class="badge bg-primary">{{ Auth::user()->role ?? 'User' }}</span>
                                 </div>
                             </div>
-                            @endforeach
-                        @else
-                        <p class="text-center text-muted py-3">Belum ada aktivitas</p>
-                        @endif
+                            <div class="col-md-8">
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <th width="200">Nama Lengkap</th>
+                                        <td>{{ Auth::user()->name }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Email</th>
+                                        <td>{{ Auth::user()->email }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Role</th>
+                                        <td><span class="badge bg-primary">{{ Auth::user()->role ?? 'User' }}</span></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Bergabung Sejak</th>
+                                        <td>{{ Auth::user()->created_at->format('d F Y') }}</td>
+                                    </tr>
+                                    @if(Auth::user()->phone)
+                                    <tr>
+                                        <th>Telepon</th>
+                                        <td>{{ Auth::user()->phone }}</td>
+                                    </tr>
+                                    @endif
+                                    @if(Auth::user()->address)
+                                    <tr>
+                                        <th>Alamat</th>
+                                        <td>{{ Auth::user()->address }}</td>
+                                    </tr>
+                                    @endif
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+    
+    <div class="col-lg-4">
+        <div class="card border-left-info shadow h-100 py-2 mb-4">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Aksi Cepat
+                        </div>
+                        <div class="mt-3 d-grid gap-2">
+                            <a href="{{ route('profile.edit') }}" class="btn btn-primary">
+                                <i class="fas fa-edit me-2"></i> Edit Profil
+                            </a>
+                            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                                <i class="fas fa-key me-2"></i> Ganti Password
+                            </button>
+                            <a href="{{ route('logout') }}" class="btn btn-outline-danger"
+                               onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                                <i class="fas fa-sign-out-alt me-2"></i> Keluar
+                            </a>
+                            <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
+                                @csrf
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Statistik
+                        </div>
+                        <div class="mt-3">
+                            <p class="mb-2"><i class="fas fa-calendar-check text-primary me-2"></i> Login terakhir: {{ now()->format('d M Y H:i') }}</p>
+                            <p class="mb-0"><i class="fas fa-user-clock text-info me-2"></i> Member sejak: {{ Auth::user()->created_at->diffForHumans() }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <!-- Info Pengembangan Fase 2 -->
-    <div class="alert alert-info mt-4">
-        <i class="fas fa-info-circle"></i>
-        <strong>Info:</strong> Fitur edit profil, ganti password, dan notifikasi akan tersedia di Fase 2 pengembangan.
+<!-- Modal Ganti Password -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="changePasswordModalLabel">Ganti Password</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+<form action="{{ route('profile.password.update') }}" method="POST">
+    @csrf
+    @method('PUT') {{-- TAMBAHKAN INI KARENA ROUTE MENGGUNAKAN METHOD PUT --}}
+            @csrf
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="current_password" class="form-label">Password Saat Ini</label>
+                        <input type="password" class="form-control @error('current_password') is-invalid @enderror" 
+                               id="current_password" name="current_password" required>
+                        @error('current_password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password Baru</label>
+                        <input type="password" class="form-control @error('password') is-invalid @enderror" 
+                               id="password" name="password" required>
+                        @error('password')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="password_confirmation" class="form-label">Konfirmasi Password Baru</label>
+                        <input type="password" class="form-control" 
+                               id="password_confirmation" name="password_confirmation" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    // Auto show modal if there are password errors
+    @if($errors->has('current_password') || $errors->has('password'))
+        document.addEventListener('DOMContentLoaded', function() {
+            var modal = new bootstrap.Modal(document.getElementById('changePasswordModal'));
+            modal.show();
+        });
+    @endif
+</script>
+@endpush

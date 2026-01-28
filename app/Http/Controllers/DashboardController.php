@@ -2,39 +2,30 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Asset;
-use Illuminate\Support\Facades\DB;
+use App\Models\AssetHistory;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // Total aset
-        $totalAssets = Asset::count();
-        
-        // Total nilai aset
-        $totalValue = Asset::sum('nilai_perolehan');
-        
-        // Aset berdasarkan kondisi
-        $assetsByCondition = Asset::select('kondisi', DB::raw('count(*) as total'))
-            ->groupBy('kondisi')
-            ->pluck('total', 'kondisi');
-        
-        // Aset berdasarkan kategori
-        $assetsByCategory = Asset::select('kategori', DB::raw('count(*) as total'))
-            ->groupBy('kategori')
-            ->pluck('total', 'kategori');
-        
-        // Aset yang perlu maintenance (contoh: kondisi rusak ringan/berat)
-        $needMaintenance = Asset::whereIn('kondisi', ['Rusak Ringan', 'Rusak Berat'])->count();
-        
-        return view('dashboard', compact(
-            'totalAssets',
-            'totalValue',
-            'assetsByCondition',
-            'assetsByCategory',
-            'needMaintenance'
-        ));
+        $stats = [
+            'totalAssets' => Asset::count(),
+            'totalValue' => Asset::sum('nilai_perolehan'),
+            'assetsByCondition' => Asset::groupBy('kondisi')
+                ->selectRaw('kondisi, count(*) as total')
+                ->get(),
+            'recentAssets' => Asset::latest()->take(5)->get(),
+            'recentTransfers' => AssetHistory::with('asset')
+                ->latest()
+                ->take(5)
+                ->get(),
+            'assetsByCategory' => Asset::groupBy('kategori')
+                ->selectRaw('kategori, count(*) as total')
+                ->get()
+        ];
+
+        return view('dashboard', $stats);
     }
 }

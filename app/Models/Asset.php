@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Asset extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity; // <-- TAMBAHKAN LogsActivity disini
 
     protected $fillable = [
         'kode_aset',
@@ -31,6 +33,16 @@ class Asset extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
     ];
+
+    // Tambahkan method ini untuk konfigurasi activity log
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['kode_aset', 'nama_aset', 'kategori', 'kondisi', 'lokasi', 'pemegang_saat_ini', 'nilai_perolehan'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs()
+            ->setDescriptionForEvent(fn(string $eventName) => "Aset {$this->nama_aset} telah {$eventName}");
+    }
 
     // Relasi ke histori pemegang
     public function histories()
