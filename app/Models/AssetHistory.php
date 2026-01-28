@@ -13,14 +13,18 @@ class AssetHistory extends Model
         'asset_id',
         'dari_pemegang',
         'ke_pemegang',
+        'lokasi_lama',
+        'lokasi_baru',
+        'kondisi_lama',
+        'kondisi_baru',
+        'departemen_lama',
+        'departemen_baru',
         'tanggal_serah_terima',
         'nomor_ba',
+        'jenis_perubahan',
         'file_ba',
-        'keterangan'
-    ];
-
-    protected $casts = [
-        'tanggal_serah_terima' => 'date'
+        'keterangan',
+        'created_by'
     ];
 
     // Relasi ke asset
@@ -29,19 +33,37 @@ class AssetHistory extends Model
         return $this->belongsTo(Asset::class);
     }
 
-    // Generate nomor BA otomatis
+    // Relasi ke user yang membuat histori (created_by)
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // Relasi ke user (jika ada relasi langsung)
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    // Accessor untuk nama creator
+    public function getCreatorNameAttribute()
+    {
+        if ($this->created_by) {
+            $user = User::find($this->created_by);
+            return $user ? $user->name : "User #{$this->created_by}";
+        }
+        return 'System';
+    }
+
+    // Method untuk generate nomor BA
     public static function generateNomorBA()
     {
-        $year = date('Y');
         $month = date('m');
+        $year = date('Y');
+        $count = self::whereYear('created_at', $year)
+                    ->whereMonth('created_at', $month)
+                    ->count() + 1;
         
-        $lastBA = self::whereYear('created_at', $year)
-                      ->whereMonth('created_at', $month)
-                      ->latest()
-                      ->first();
-        
-        $number = $lastBA ? (int)substr($lastBA->nomor_ba, -4) + 1 : 1;
-        
-        return sprintf('BA/%s/%s/%04d', $month, $year, $number);
+        return "BA/{$month}/{$year}/" . str_pad($count, 4, '0', STR_PAD_LEFT);
     }
 }

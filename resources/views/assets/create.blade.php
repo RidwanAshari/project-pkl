@@ -132,6 +132,80 @@
                             @enderror
                         </div>
 
+                        <!-- Form Khusus Kendaraan (tampil jika kategori = Kendaraan) -->
+                        <div id="vehicle-form" style="display: none;">
+                            <hr class="my-4">
+                            <h5 class="text-primary mb-3">Detail Kendaraan</h5>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nama Pemilik/Pengguna</label>
+                                    <input type="text" name="nama_pemilik" class="form-control" value="{{ old('nama_pemilik') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Jabatan</label>
+                                    <input type="text" name="jabatan" class="form-control" value="{{ old('jabatan') }}">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nomor Plat</label>
+                                    <input type="text" name="nomor_plat" class="form-control" placeholder="Contoh: B 1234 XYZ" value="{{ old('nomor_plat') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Alamat</label>
+                                    <textarea name="alamat" class="form-control" rows="1">{{ old('alamat') }}</textarea>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Model</label>
+                                    <input type="text" name="model" class="form-control" value="{{ old('model') }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Tahun Pembuatan</label>
+                                    <input type="number" name="tahun_pembuatan" class="form-control" value="{{ old('tahun_pembuatan') }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Isi Silinder</label>
+                                    <input type="text" name="isi_silinder" class="form-control" placeholder="Contoh: 1500 CC" value="{{ old('isi_silinder') }}">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nomor Rangka</label>
+                                    <input type="text" name="nomor_rangka" class="form-control" value="{{ old('nomor_rangka') }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Nomor Mesin</label>
+                                    <input type="text" name="nomor_mesin" class="form-control" value="{{ old('nomor_mesin') }}">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">Warna</label>
+                                    <input type="text" name="warna" class="form-control" value="{{ old('warna') }}">
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Bahan Bakar</label>
+                                    <select name="bahan_bakar" class="form-select">
+                                        <option value="">Pilih</option>
+                                        <option value="Bensin">Bensin</option>
+                                        <option value="Solar">Solar</option>
+                                        <option value="Listrik">Listrik</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Nomor BPKB</label>
+                                    <input type="text" name="nomor_bpkb" class="form-control" value="{{ old('nomor_bpkb') }}">
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-save"></i> Simpan Aset
@@ -143,4 +217,22 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.querySelector('select[name="kategori"]').addEventListener('change', function() {
+    const vehicleForm = document.getElementById('vehicle-form');
+    if (this.value === 'Kendaraan') {
+        vehicleForm.style.display = 'block';
+    } else {
+        vehicleForm.style.display = 'none';
+    }
+});
+
+// Trigger on page load if old value
+if (document.querySelector('select[name="kategori"]').value === 'Kendaraan') {
+    document.getElementById('vehicle-form').style.display = 'block';
+}
+</script>
+@endpush
 @endsection
