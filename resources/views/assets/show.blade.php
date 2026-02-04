@@ -7,18 +7,10 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1 class="h3 mb-0 text-gray-800">Detail Aset</h1>
         <div>
-            {{-- HAPUS atau KOMENTARI bagian ini jika route vehicles.show tidak ada --}}
-            {{--
-            @if($asset->kategori == 'Kendaraan')
-            <a href="{{ route('vehicles.show', $asset) }}" class="btn btn-info">
-                <i class="fas fa-car"></i> Detail Kendaraan
-            </a>
-            @endif
-            --}}
             
             {{-- Atau ganti dengan route yang ada --}}
             @if($asset->kategori == 'Kendaraan')
-            <a href="{{ route('assets.show', $asset) }}" class="btn btn-info">
+            <a href="{{ route('vehicles.show', $asset) }}" class="btn btn-info">
                 <i class="fas fa-car"></i> Detail Kendaraan
             </a>
             @endif

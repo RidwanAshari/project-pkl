@@ -234,14 +234,18 @@ class AssetController extends Controller
             }
         }
 
+        // PERBAIKAN DI SINI (LINE 458 SEKARANG)
         // Buat histori awal jika ada pemegang
         if ($request->filled('pemegang_saat_ini')) {
+            // Cara 1: Panggil method static yang sudah diperbaiki
+            $nomorBA = AssetHistory::generateNomorBA();
+            
             AssetHistory::create([
                 'asset_id' => $asset->id,
                 'dari_pemegang' => null,
                 'ke_pemegang' => $request->pemegang_saat_ini,
                 'tanggal_serah_terima' => now(),
-                'nomor_ba' => AssetHistory::generateNomorBA(),
+                'nomor_ba' => $nomorBA, // Menggunakan variable yang sudah digenerate
                 'jenis_perubahan' => 'Penerimaan Awal',
                 'keterangan' => $request->filled('keterangan') 
                     ? $request->keterangan 
@@ -446,6 +450,9 @@ class AssetController extends Controller
 
         $validated = $validator->validated();
 
+        // PERBAIKAN DI SINI: Gunakan method static yang benar
+        $nomorBA = AssetHistory::generateNomorBA();
+
         // Buat data histori
         $historyData = [
             'asset_id' => $asset->id,
@@ -455,7 +462,7 @@ class AssetController extends Controller
             'kondisi_lama' => $asset->kondisi,
             'departemen_lama' => $asset->departemen,
             'tanggal_serah_terima' => $validated['tanggal_serah_terima'],
-            'nomor_ba' => AssetHistory::generateNomorBA(),
+            'nomor_ba' => $nomorBA, // Menggunakan variable yang sudah digenerate
             'jenis_perubahan' => 'Transfer Pemegang',
             'keterangan' => $validated['keterangan']
         ];
