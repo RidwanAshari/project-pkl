@@ -68,26 +68,49 @@ class AssetPinjamanController extends Controller
             $validated['foto'] = $request->file('foto')->store('assets', 'public');
         }
 
+        // Generate QR Code
+        $qrCode = \QrCode::format('svg')->size(200)->errorCorrection('H')->generate($validated['kode_aset']);
+        $qrPath = 'qrcodes/' . $validated['kode_aset'] . '.svg';
+        \Illuminate\Support\Facades\Storage::disk('public')->put($qrPath, $qrCode);
+
         $assetData = collect($validated)->only([
             'kode_aset', 'nama_aset', 'kategori', 'merk', 'tipe',
             'tahun_perolehan', 'nilai_perolehan', 'kondisi', 'lokasi',
             'pemegang_saat_ini', 'keterangan', 'foto'
         ])->toArray();
-        $assetData['tipe_dashboard'] = 'biaya';
-        $assetData['qr_code']        = 'qr_' . $validated['kode_aset'];
+        $assetData['tipe_dashboard']   = 'pinjaman';
+        $assetData['qr_code']          = $qrPath;
+        $assetData['jabatan_pemegang'] = $request->jabatan_pemegang;
+        $assetData['alamat_pemegang']  = $request->alamat_pemegang;
+        $assetData['nipp_pemegang']    = $request->nipp_pemegang;
 
         $asset = Asset::create($assetData);
 
         if ($validated['kategori'] === 'Kendaraan') {
             $vehicleData = collect($validated)->only([
-                'nama_pemilik', 'jabatan', 'alamat', 'nomor_plat', 'model',
-                'tahun_pembuatan', 'isi_silinder', 'nomor_rangka', 'nomor_mesin',
-                'warna', 'bahan_bakar', 'nomor_bpkb'
+                'nomor_plat', 'model', 'tahun_pembuatan', 'isi_silinder',
+                'nomor_rangka', 'nomor_mesin', 'warna', 'bahan_bakar', 'nomor_bpkb'
             ])->filter()->toArray();
             if (!empty($vehicleData)) {
-                $vehicleData['asset_id'] = $asset->id;
+                $vehicleData['asset_id']     = $asset->id;
+                $vehicleData['nama_pemilik'] = $asset->pemegang_saat_ini;
+                $vehicleData['jabatan']      = $asset->jabatan_pemegang;
+                $vehicleData['alamat']       = $asset->alamat_pemegang;
                 \App\Models\VehicleDetail::create($vehicleData);
             }
+        }
+
+        if ($request->filled('pemegang_saat_ini')) {
+            \App\Models\AssetHistory::create([
+                'asset_id'             => $asset->id,
+                'dari_pemegang'        => null,
+                'ke_pemegang'          => $request->pemegang_saat_ini,
+                'jabatan_ke'           => $request->jabatan_pemegang,
+                'nipp_ke'              => $request->nipp_pemegang,
+                'tanggal_serah_terima' => now(),
+                'nomor_ba'             => \App\Models\AssetHistory::generateNomorBA(),
+                'keterangan'           => 'Penerimaan awal aset'
+            ]);
         }
 
         return redirect()->route('assets-pinjaman.index')->with('success', 'Aset Pinjaman berhasil ditambahkan!');

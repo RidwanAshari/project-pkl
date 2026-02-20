@@ -11,125 +11,136 @@
         </a>
     </div>
 
+    @if($errors->any())
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
     <div class="row">
         <div class="col-lg-8">
             <div class="card shadow">
                 <div class="card-body">
-                    <form action="{{ route('vehicles.store-maintenance', $asset) }}" method="POST" enctype="multipart/form-data" id="maintenanceForm">
+                    <form action="{{ route('vehicles.maintenance.store', $asset) }}" method="POST" enctype="multipart/form-data" id="mainForm">
                         @csrf
 
+                        {{-- Info Kendaraan --}}
+                        <div class="alert alert-info">
+                            <strong><i class="fas fa-car"></i> {{ $asset->nama_aset }}</strong><br>
+                            <small>{{ $asset->merk }} {{ $asset->tipe }} - {{ $asset->vehicleDetail->nomor_plat ?? '-' }}</small>
+                        </div>
+
+                        {{-- Tanggal & Jenis Servis --}}
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal <span class="text-danger">*</span></label>
-                                <input type="date" name="tanggal" class="form-control @error('tanggal') is-invalid @enderror"
-                                    value="{{ old('tanggal', date('Y-m-d')) }}" required>
-                                @error('tanggal')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <input type="date" name="tanggal" class="form-control" value="{{ old('tanggal', date('Y-m-d')) }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Jenis Servis <span class="text-danger">*</span></label>
-                                <select name="jenis_servis" id="jenis_servis" class="form-select @error('jenis_servis') is-invalid @enderror" required>
-                                    <option value="">Pilih Jenis Servis</option>
-                                    <option value="Pengisian BBM" {{ old('jenis_servis') == 'Pengisian BBM' ? 'selected' : '' }}>Pengisian BBM</option>
-                                    <option value="Service Rutin" {{ old('jenis_servis') == 'Service Rutin' ? 'selected' : '' }}>Service Rutin</option>
-                                    <option value="Perbaikan" {{ old('jenis_servis') == 'Perbaikan' ? 'selected' : '' }}>Perbaikan</option>
-                                    <option value="Penggantian" {{ old('jenis_servis') == 'Penggantian' ? 'selected' : '' }}>Penggantian</option>
-                                    <option value="Bayar Pajak" {{ old('jenis_servis') == 'Bayar Pajak' ? 'selected' : '' }}>Bayar Pajak</option>
+                                <select name="jenis_servis" id="jenis_servis" class="form-select" required>
+                                    <option value="">-- Pilih Jenis Servis --</option>
+                                    <option value="Pengisian BBM">Pengisian BBM</option>
+                                    <option value="Service Rutin">Service Rutin</option>
+                                    <option value="Perbaikan">Perbaikan</option>
+                                    <option value="Penggantian">Penggantian</option>
+                                    <option value="Bayar Pajak">Bayar Pajak</option>
                                 </select>
-                                @error('jenis_servis')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                         </div>
 
-                        {{-- ========= FORM BBM ========= --}}
-                        <div id="form-bbm" style="display: none;">
-                            <div class="alert alert-info">
-                                <strong><i class="fas fa-gas-pump me-2"></i>Form Pengisian BBM</strong>
-                            </div>
+                        {{-- Form BBM --}}
+                        <div id="fields-bbm" style="display: none;">
+                            <hr><h6 class="text-primary">Detail Pengisian BBM</h6>
                             <div class="row mb-3">
                                 <div class="col-md-4">
                                     <label class="form-label">Jenis BBM</label>
                                     <select name="jenis_bbm" class="form-select">
                                         <option value="">Pilih BBM</option>
-                                        <option value="Pertalite" {{ old('jenis_bbm') == 'Pertalite' ? 'selected' : '' }}>Pertalite</option>
-                                        <option value="Pertamax" {{ old('jenis_bbm') == 'Pertamax' ? 'selected' : '' }}>Pertamax</option>
-                                        <option value="Pertamax Turbo" {{ old('jenis_bbm') == 'Pertamax Turbo' ? 'selected' : '' }}>Pertamax Turbo</option>
-                                        <option value="Solar" {{ old('jenis_bbm') == 'Solar' ? 'selected' : '' }}>Solar</option>
-                                        <option value="Dex" {{ old('jenis_bbm') == 'Dex' ? 'selected' : '' }}>Dex</option>
+                                        <option value="Pertalite">Pertalite</option>
+                                        <option value="Pertamax">Pertamax</option>
+                                        <option value="Pertamax Turbo">Pertamax Turbo</option>
+                                        <option value="Solar">Solar</option>
+                                        <option value="Dex">Dex</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Jumlah (Liter)</label>
-                                    <input type="number" step="0.01" name="jumlah_liter" id="jumlah_liter" class="form-control" value="{{ old('jumlah_liter') }}">
+                                    <input type="number" step="0.01" name="jumlah_liter" class="form-control">
                                 </div>
                                 <div class="col-md-4">
                                     <label class="form-label">Harga per Liter</label>
-                                    <input type="number" name="harga_per_liter" id="harga_per_liter" class="form-control" value="{{ old('harga_per_liter') }}">
+                                    <input type="number" name="harga_per_liter" class="form-control">
                                 </div>
                             </div>
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Odometer (KM)</label>
-                                    <input type="number" name="odometer" class="form-control" placeholder="Contoh: 45000" value="{{ old('odometer') }}">
+                                    <input type="number" name="odometer" class="form-control" placeholder="Contoh: 45000">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Biaya Total <span class="text-danger">*</span></label>
+                                    <input type="number" name="biaya_bbm" id="biaya-bbm" class="form-control" placeholder="Masukkan biaya total">
                                 </div>
                             </div>
-                            {{-- Biaya & Nota untuk BBM --}}
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Biaya <span class="text-danger">*</span></label>
-                                    <input type="number" name="biaya" id="biaya-bbm" class="form-control" value="{{ old('biaya') }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Upload Nota/Bukti</label>
-                                    <input type="file" name="file_nota" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                    <small class="text-muted">Format: PDF, JPG, PNG (Max 2MB)</small>
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Upload Nota/Bukti</label>
+                                <input type="file" name="file_nota" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="text-muted">Format: PDF, JPG, PNG (Max 2MB)</small>
                             </div>
                         </div>
 
-                        {{-- ========= FORM SERVICE RUTIN / PERBAIKAN / PENGGANTIAN ========= --}}
-                        {{-- Tanpa biaya dan tanpa nota --}}
-                        <div id="form-service" style="display: none;">
-                            <div class="alert alert-success">
-                                <strong><i class="fas fa-wrench me-2"></i>Form Service/Perbaikan/Penggantian</strong>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Keterangan</label>
-                                <textarea name="keterangan" class="form-control" rows="3"
-                                    placeholder="Jelaskan detail pekerjaan...">{{ old('keterangan') }}</textarea>
-                            </div>
+                        {{-- Form Service --}}
+                        <div id="fields-service" style="display: none;">
+                            <hr><h6 class="text-success">Detail Service/Perbaikan/Penggantian</h6>
                             <div class="mb-3">
                                 <label class="form-label">Bengkel/Tempat Service</label>
-                                <input type="text" name="bengkel" class="form-control"
-                                    placeholder="Contoh: Bengkel ABC" value="{{ old('bengkel') }}">
-                            </div>
-                            {{-- Tidak ada kolom biaya dan tidak ada upload nota --}}
-                        </div>
-
-                        {{-- ========= FORM PAJAK ========= --}}
-                        <div id="form-pajak" style="display: none;">
-                            <div class="alert alert-warning">
-                                <strong><i class="fas fa-file-invoice me-2"></i>Form Pembayaran Pajak</strong>
+                                <select name="bengkel" class="form-select">
+                                    <option value="">-- Pilih Bengkel --</option>
+                                    @foreach($bengkels as $bengkel)
+                                        <option value="{{ $bengkel->nama }}">{{ $bengkel->nama }} - {{ $bengkel->alamat }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Keterangan</label>
-                                <textarea name="keterangan" class="form-control" rows="2"
-                                    placeholder="Contoh: Pajak tahun 2026">{{ old('keterangan') }}</textarea>
-                            </div>
-                            {{-- Biaya & Nota untuk Pajak --}}
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Biaya <span class="text-danger">*</span></label>
-                                    <input type="number" name="biaya" id="biaya-pajak" class="form-control" value="{{ old('biaya') }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Upload Nota/Bukti</label>
-                                    <input type="file" name="file_nota" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
-                                    <small class="text-muted">Format: PDF, JPG, PNG (Max 2MB)</small>
-                                </div>
+                                <label class="form-label">Keterangan / Suku Cadang <span class="text-danger">*</span></label>
+                                <textarea name="keterangan" id="keterangan-field" class="form-control" rows="5" placeholder="Format untuk surat pengantar (pisahkan dengan ENTER):
+
+OLI MESIN|1|LT
+ban belakang luar dan dalam|1|set
+filter udara|1|pcs
+
+Atau tulis keterangan biasa tanpa format."></textarea>
+                                <small class="text-muted"><i class="fas fa-info-circle"></i> Format: <code>Uraian|Jumlah|Satuan</code></small>
                             </div>
                         </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary" id="btn-submit" style="display:none;">
+                        {{-- Form Pajak --}}
+                        <div id="fields-pajak" style="display: none;">
+                            <hr><h6 class="text-danger">Detail Pembayaran Pajak</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Jenis Pajak</label>
+                                    <input type="text" name="jenis_pajak" class="form-control" placeholder="Contoh: Pajak Kendaraan Tahunan">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Biaya <span class="text-danger">*</span></label>
+                                    <input type="number" name="biaya_pajak" id="biaya-pajak" class="form-control">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Upload Nota/Bukti</label>
+                                <input type="file" name="file_nota" class="form-control" accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="text-muted">Format: PDF, JPG, PNG (Max 2MB)</small>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-4" id="submit-wrapper" style="display:none;">
+                            <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="fas fa-save"></i> Simpan Data Pemeliharaan
                             </button>
                         </div>
@@ -142,49 +153,58 @@
 
 @push('scripts')
 <script>
-const jenisServis = document.getElementById('jenis_servis');
+document.addEventListener('DOMContentLoaded', function() {
+    const jenisServis = document.getElementById('jenis_servis');
+    const fieldsBBM = document.getElementById('fields-bbm');
+    const fieldsService = document.getElementById('fields-service');
+    const fieldsPajak = document.getElementById('fields-pajak');
+    const submitWrapper = document.getElementById('submit-wrapper');
+    
+    // Field biaya untuk BBM
+    const biayaBBMInput = document.getElementById('biaya-bbm');
+    
+    // Field biaya untuk Pajak
+    const biayaPajakInput = document.getElementById('biaya-pajak');
+    
+    // Field keterangan untuk Service
+    const keteranganInput = document.getElementById('keterangan-field');
 
-jenisServis.addEventListener('change', function() {
-    const jenis = this.value;
-
-    // Sembunyikan semua
-    document.getElementById('form-bbm').style.display    = 'none';
-    document.getElementById('form-service').style.display = 'none';
-    document.getElementById('form-pajak').style.display  = 'none';
-    document.getElementById('btn-submit').style.display  = 'none';
-
-    if (jenis === 'Pengisian BBM') {
-        document.getElementById('form-bbm').style.display = 'block';
-        document.getElementById('btn-submit').style.display = 'block';
-
-    } else if (jenis === 'Bayar Pajak') {
-        document.getElementById('form-pajak').style.display = 'block';
-        document.getElementById('btn-submit').style.display = 'block';
-
-    } else if (jenis !== '') {
-        // Service Rutin, Perbaikan, Penggantian — tanpa biaya & nota
-        document.getElementById('form-service').style.display = 'block';
-        document.getElementById('btn-submit').style.display = 'block';
+    jenisServis.addEventListener('change', function() {
+        const jenis = this.value;
+        
+        // Hide all & remove required
+        fieldsBBM.style.display = 'none';
+        fieldsService.style.display = 'none';
+        fieldsPajak.style.display = 'none';
+        submitWrapper.style.display = 'none';
+        
+        if (biayaBBMInput) biayaBBMInput.removeAttribute('required');
+        if (biayaPajakInput) biayaPajakInput.removeAttribute('required');
+        if (keteranganInput) keteranganInput.removeAttribute('required');
+        
+        if (jenis === 'Pengisian BBM') {
+            fieldsBBM.style.display = 'block';
+            submitWrapper.style.display = 'block';
+            if (biayaBBMInput) biayaBBMInput.setAttribute('required', 'required');
+            
+        } else if (jenis === 'Bayar Pajak') {
+            fieldsPajak.style.display = 'block';
+            submitWrapper.style.display = 'block';
+            if (biayaPajakInput) biayaPajakInput.setAttribute('required', 'required');
+            
+        } else if (jenis !== '') {
+            // Service Rutin, Perbaikan, Penggantian
+            fieldsService.style.display = 'block';
+            submitWrapper.style.display = 'block';
+            if (keteranganInput) keteranganInput.setAttribute('required', 'required');
+        }
+    });
+    
+    // Trigger on load if old value
+    if (jenisServis.value) {
+        jenisServis.dispatchEvent(new Event('change'));
     }
 });
-
-// Auto-calculate biaya dari BBM
-document.getElementById('jumlah_liter').addEventListener('input', calculateBBM);
-document.getElementById('harga_per_liter').addEventListener('input', calculateBBM);
-
-function calculateBBM() {
-    const liter = parseFloat(document.getElementById('jumlah_liter').value) || 0;
-    const harga = parseFloat(document.getElementById('harga_per_liter').value) || 0;
-    const total = liter * harga;
-    if (total > 0) {
-        document.getElementById('biaya-bbm').value = total;
-    }
-}
-
-// Trigger saat halaman load jika ada old value
-if (jenisServis.value) {
-    jenisServis.dispatchEvent(new Event('change'));
-}
 </script>
 @endpush
 @endsection

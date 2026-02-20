@@ -161,7 +161,7 @@
             <div class="card shadow">
                 <div class="card-header py-3 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 font-weight-bold text-primary">Data Pemeliharaan & Operasional</h6>
-                    <a href="{{ route('vehicles.create-maintenance', $asset) }}" class="btn btn-sm btn-success">
+                    <a href="{{ route('vehicles.maintenance.create', $asset) }}" class="btn btn-sm btn-success">
                         <i class="fas fa-plus"></i> Tambah Data
                     </a>
                 </div>
@@ -178,7 +178,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @forelse($maintenances as $m)
+                                @forelse($asset->vehicleMaintenances as $m)
                                 <tr>
                                     <td>{{ $m->tanggal->format('d/m/Y') }}</td>
                                     <td>
@@ -210,12 +210,15 @@
                                             <i class="fas fa-file"></i>
                                         </a>
                                         @endif
-                                        @if($m->file_surat_pengantar)
-                                        <a href="{{ route('vehicles.download-surat', [$asset, $m]) }}" class="btn btn-sm btn-success" title="Download Surat Pengantar">
-                                            <i class="fas fa-file-pdf"></i>
+                                        
+                                        {{-- Surat pengantar hanya untuk Service Rutin, Perbaikan, Penggantian --}}
+                                        @if(in_array($m->jenis_servis, ['Service Rutin', 'Perbaikan', 'Penggantian']))
+                                        <a href="{{ route('vehicles.maintenance.surat-pengantar', [$asset, $m]) }}" class="btn btn-sm btn-success" title="Download Surat Pengantar" target="_blank">
+                                            <i class="fas fa-file-pdf"></i> Surat
                                         </a>
                                         @endif
-                                        <form action="{{ route('vehicles.delete-maintenance', [$asset, $m]) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus?')">
+                                        
+                                        <form action="{{ route('vehicles.maintenance.delete', [$asset, $m]) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus?')">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
@@ -236,7 +239,7 @@
                     </div>
 
                     <div class="mt-3">
-                        {{ $maintenances->links() }}
+                        {{-- Pagination removed karena pakai relasi, bukan paginate --}}
                     </div>
                 </div>
             </div>
@@ -257,7 +260,7 @@
                     <div class="card shadow border-left-info">
                         <div class="card-body">
                             <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Biaya BBM</div>
-                            <div class="h5 mb-0 font-weight-bold">Rp {{ number_format($totalBBM, 0, ',', '.') }}</div>
+                            <div class="h5 mb-0 font-weight-bold">Rp {{ number_format($biayaBBM, 0, ',', '.') }}</div>
                         </div>
                     </div>
                 </div>
@@ -265,7 +268,7 @@
                     <div class="card shadow border-left-success">
                         <div class="card-body">
                             <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Biaya Service</div>
-                            <div class="h5 mb-0 font-weight-bold">Rp {{ number_format($totalService, 0, ',', '.') }}</div>
+                            <div class="h5 mb-0 font-weight-bold">Rp {{ number_format($biayaService, 0, ',', '.') }}</div>
                         </div>
                     </div>
                 </div>
@@ -273,7 +276,7 @@
                     <div class="card shadow border-left-danger">
                         <div class="card-body">
                             <div class="text-xs font-weight-bold text-danger text-uppercase mb-1">Biaya Pajak</div>
-                            <div class="h5 mb-0 font-weight-bold">Rp {{ number_format($totalPajak, 0, ',', '.') }}</div>
+                            <div class="h5 mb-0 font-weight-bold">Rp {{ number_format($biayaPajak, 0, ',', '.') }}</div>
                         </div>
                     </div>
                 </div>
@@ -301,7 +304,7 @@ if (ctx) {
         data: {
             labels: ['BBM', 'Service/Perbaikan', 'Pajak'],
             datasets: [{
-                data: [{{ $totalBBM }}, {{ $totalService }}, {{ $totalPajak }}],
+                data: [{{ $biayaBBM }}, {{ $biayaService }}, {{ $biayaPajak }}],
                 backgroundColor: ['#36b9cc', '#1cc88a', '#e74a3b']
             }]
         },

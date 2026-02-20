@@ -13,35 +13,30 @@ class AssetHistory extends Model
         'asset_id',
         'dari_pemegang',
         'ke_pemegang',
+        'jabatan_dari',   // jabatan pihak pertama (yang menyerahkan)
+        'jabatan_ke',     // jabatan pihak kedua (yang menerima)
+        'nipp_dari',      // NIPP pihak pertama
+        'nipp_ke',        // NIPP pihak kedua
         'tanggal_serah_terima',
         'nomor_ba',
-        'file_ba',
-        'keterangan'
+        'keterangan',
     ];
 
     protected $casts = [
-        'tanggal_serah_terima' => 'date'
+        'tanggal_serah_terima' => 'datetime',
     ];
 
-    // Relasi ke asset
     public function asset()
     {
         return $this->belongsTo(Asset::class);
     }
 
-    // Generate nomor BA otomatis
     public static function generateNomorBA()
     {
-        $year = date('Y');
-        $month = date('m');
-        
-        $lastBA = self::whereYear('created_at', $year)
-                      ->whereMonth('created_at', $month)
-                      ->latest()
-                      ->first();
-        
-        $number = $lastBA ? (int)substr($lastBA->nomor_ba, -4) + 1 : 1;
-        
-        return sprintf('BA/%s/%s/%04d', $month, $year, $number);
+        $tahun  = date('Y');
+        $bulan  = date('m');
+        $count  = self::whereYear('created_at', $tahun)->count() + 1;
+        $urutan = str_pad($count, 3, '0', STR_PAD_LEFT);
+        return "690.{$urutan}/U/BA/AK/{$bulan}/{$tahun}";
     }
 }

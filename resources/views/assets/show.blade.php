@@ -49,7 +49,6 @@
                             <p class="fw-bold">{{ $asset->nama_aset }}</p>
                         </div>
                     </div>
-
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="text-muted small">Kategori</label>
@@ -68,7 +67,6 @@
                             </p>
                         </div>
                     </div>
-
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="text-muted small">Merk</label>
@@ -79,7 +77,6 @@
                             <p>{{ $asset->tipe ?? '-' }}</p>
                         </div>
                     </div>
-
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="text-muted small">Tahun Perolehan</label>
@@ -90,7 +87,6 @@
                             <p class="fw-bold text-success">Rp {{ number_format($asset->nilai_perolehan, 0, ',', '.') }}</p>
                         </div>
                     </div>
-
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="text-muted small">Lokasi</label>
@@ -101,7 +97,6 @@
                             <p class="fw-bold">{{ $asset->pemegang_saat_ini ?? '-' }}</p>
                         </div>
                     </div>
-
                     @if($asset->keterangan)
                     <div class="row mb-3">
                         <div class="col-12">
@@ -161,7 +156,6 @@
 
         <!-- Foto & QR Code -->
         <div class="col-lg-4">
-            <!-- Foto Aset -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Foto Aset</h6>
@@ -177,8 +171,6 @@
                     @endif
                 </div>
             </div>
-
-            <!-- QR Code -->
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">QR Code</h6>
@@ -201,38 +193,115 @@
 
 <!-- Modal Transfer Aset -->
 <div class="modal fade" id="transferModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Transfer Aset</h5>
+                <h5 class="modal-title"><i class="fas fa-exchange-alt me-2"></i>Transfer Aset — Isi Data Berita Acara</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form action="{{ route('assets.transfer', $asset) }}" method="POST">
                 @csrf
                 <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label">Dari Pemegang</label>
-                        <input type="text" class="form-control" value="{{ $asset->pemegang_saat_ini ?? '-' }}" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Ke Pemegang <span class="text-danger">*</span></label>
-                        <input type="text" name="ke_pemegang" class="form-control" required>
-                    </div>
+
                     <div class="mb-3">
                         <label class="form-label">Tanggal Serah Terima <span class="text-danger">*</span></label>
                         <input type="date" name="tanggal_serah_terima" class="form-control" value="{{ date('Y-m-d') }}" required>
                     </div>
+
+                    <hr>
+                    <h6 class="text-primary mb-3"><i class="fas fa-user me-1"></i> PIHAK PERTAMA (Yang Menyerahkan)</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Nama</label>
+                            <input type="text" class="form-control" value="{{ $asset->pemegang_saat_ini ?? 'Bagian Pengadaan' }}" readonly>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Jabatan Pihak Pertama</label>
+                            <select name="jabatan_dari" class="form-select">
+                                <option value="">-- Pilih Jabatan --</option>
+                                <option value="Direktur Utama">Direktur Utama</option>
+                                <option value="Direktur">Direktur</option>
+                                <option value="Ka Sub Bag Umum & PDE">Ka Sub Bag Umum &amp; PDE</option>
+                                <option value="Ka Sub Bag Keuangan">Ka Sub Bag Keuangan</option>
+                                <option value="Ka Sub Bag SDM">Ka Sub Bag SDM</option>
+                                <option value="Ka Sub Unit Banjarnegoro">Ka Sub Unit Banjarnegoro</option>
+                                <option value="Ka Sub Unit Mertoyudan">Ka Sub Unit Mertoyudan</option>
+                                <option value="Ka Sub Unit Muntilan">Ka Sub Unit Muntilan</option>
+                                <option value="Ka Sub Unit Grabag">Ka Sub Unit Grabag</option>
+                                <option value="Plt. Ka Sub Unit Banjarnegoro">Plt. Ka Sub Unit Banjarnegoro</option>
+                                <option value="Plt. Ka Sub Unit Mertoyudan">Plt. Ka Sub Unit Mertoyudan</option>
+                                <option value="Plt. Ka Sub Unit Muntilan">Plt. Ka Sub Unit Muntilan</option>
+                                <option value="Staf Umum">Staf Umum</option>
+                                <option value="Staf Keuangan">Staf Keuangan</option>
+                                <option value="Staf Teknik">Staf Teknik</option>
+                                <option value="Bagian Pengadaan">Bagian Pengadaan</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">NIPP Pihak Pertama</label>
+                            <input type="text" name="nipp_dari" class="form-control" placeholder="Contoh: 1912.0606.83">
+                        </div>
+                    </div>
+
+                    <hr>
+                    <h6 class="text-success mb-3"><i class="fas fa-user me-1"></i> PIHAK KEDUA (Yang Menerima)</h6>
+
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Nama Penerima <span class="text-danger">*</span></label>
+                            <select name="ke_pemegang" class="form-select" required>
+                                <option value="">-- Pilih Penerima --</option>
+                                @foreach(\App\Models\User::orderBy('name')->get() as $user)
+                                    <option value="{{ $user->name }}"
+                                        data-jabatan="{{ $user->position ?? '' }}">
+                                        {{ $user->name }}{{ $user->position ? ' — ' . ucfirst($user->position) : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Jabatan Pihak Kedua</label>
+                            <input type="text" name="jabatan_ke" id="jabatan_ke" class="form-control" placeholder="Contoh: Ka Sub Bag Umum & PDE">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">NIPP Pihak Kedua</label>
+                            <input type="text" name="nipp_ke" class="form-control" placeholder="Contoh: 1293.0903.78">
+                        </div>
+                    </div>
+
+                    <hr>
                     <div class="mb-3">
-                        <label class="form-label">Keterangan</label>
-                        <textarea name="keterangan" class="form-control" rows="3"></textarea>
+                        <label class="form-label">Keterangan / Kondisi Aset</label>
+                        <textarea name="keterangan" class="form-control" rows="2" placeholder="Contoh: dikembalikan karena tidak dipakai / rusak"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn btn-primary">Transfer Aset</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-file-alt me-1"></i> Buat Berita Acara & Transfer
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+// Auto-fill jabatan dari dropdown penerima
+document.querySelector('select[name="ke_pemegang"]').addEventListener('change', function() {
+    const jabatan = this.options[this.selectedIndex].getAttribute('data-jabatan');
+    document.getElementById('jabatan_ke').value = jabatan ? ucfirstStr(jabatan) : '';
+});
+
+function ucfirstStr(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+</script>
+@endpush
 @endsection

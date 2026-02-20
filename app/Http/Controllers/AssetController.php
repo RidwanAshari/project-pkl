@@ -96,21 +96,27 @@ class AssetController extends Controller
             'tahun_perolehan', 'nilai_perolehan', 'kondisi', 'lokasi',
             'pemegang_saat_ini', 'keterangan', 'foto', 'qr_code'
         ])->toArray();
-        $assetData['tipe_dashboard'] = 'aset';
+        $assetData['tipe_dashboard']    = 'aset';
+        $assetData['jabatan_pemegang']  = $request->jabatan_pemegang;
+        $assetData['alamat_pemegang']   = $request->alamat_pemegang;
+        $assetData['nipp_pemegang']     = $request->nipp_pemegang;
 
         $asset = Asset::create($assetData);
 
         if ($validated['kategori'] === 'Kendaraan') {
+            // Ambil nama/jabatan/alamat dari pemegang_saat_ini, bukan dari Detail Kendaraan
             $vehicleData = collect($validated)->only([
-                'nama_pemilik', 'jabatan', 'alamat', 'nomor_plat', 'model',
-                'tahun_pembuatan', 'isi_silinder', 'nomor_rangka', 'nomor_mesin',
-                'warna', 'bahan_bakar', 'warna_tnkb', 'tahun_registrasi',
-                'nomor_bpkb', 'tanggal_berlaku', 'bulan_berlaku', 'tahun_berlaku',
-                'berat', 'sumbu', 'penumpang'
+                'nomor_plat', 'model', 'tahun_pembuatan', 'isi_silinder',
+                'nomor_rangka', 'nomor_mesin', 'warna', 'bahan_bakar',
+                'warna_tnkb', 'tahun_registrasi', 'nomor_bpkb', 'tanggal_berlaku',
+                'bulan_berlaku', 'tahun_berlaku', 'berat', 'sumbu', 'penumpang'
             ])->filter()->toArray();
 
             if (!empty($vehicleData)) {
-                $vehicleData['asset_id'] = $asset->id;
+                $vehicleData['asset_id']     = $asset->id;
+                $vehicleData['nama_pemilik'] = $asset->pemegang_saat_ini;
+                $vehicleData['jabatan']      = $asset->jabatan_pemegang;
+                $vehicleData['alamat']       = $asset->alamat_pemegang;
                 \App\Models\VehicleDetail::create($vehicleData);
             }
         }
@@ -120,6 +126,8 @@ class AssetController extends Controller
                 'asset_id'             => $asset->id,
                 'dari_pemegang'        => null,
                 'ke_pemegang'          => $request->pemegang_saat_ini,
+                'jabatan_ke'           => $request->jabatan_pemegang,
+                'nipp_ke'              => $request->nipp_pemegang,
                 'tanggal_serah_terima' => now(),
                 'nomor_ba'             => AssetHistory::generateNomorBA(),
                 'keterangan'           => 'Penerimaan awal aset'
@@ -180,6 +188,10 @@ class AssetController extends Controller
         $validated = $request->validate([
             'ke_pemegang'          => 'required',
             'tanggal_serah_terima' => 'required|date',
+            'jabatan_dari'         => 'nullable|string',
+            'jabatan_ke'           => 'nullable|string',
+            'nipp_dari'            => 'nullable|string',
+            'nipp_ke'              => 'nullable|string',
             'keterangan'           => 'nullable'
         ]);
 
@@ -187,6 +199,10 @@ class AssetController extends Controller
             'asset_id'             => $asset->id,
             'dari_pemegang'        => $asset->pemegang_saat_ini,
             'ke_pemegang'          => $validated['ke_pemegang'],
+            'jabatan_dari'         => $validated['jabatan_dari'] ?? null,
+            'jabatan_ke'           => $validated['jabatan_ke'] ?? null,
+            'nipp_dari'            => $validated['nipp_dari'] ?? null,
+            'nipp_ke'              => $validated['nipp_ke'] ?? null,
             'tanggal_serah_terima' => $validated['tanggal_serah_terima'],
             'nomor_ba'             => AssetHistory::generateNomorBA(),
             'keterangan'           => $validated['keterangan']

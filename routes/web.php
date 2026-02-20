@@ -73,4 +73,18 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('vehicles/{asset}/maintenance/{maintenance}', [VehicleController::class, 'deleteMaintenance'])->name('vehicles.delete-maintenance');
     Route::get('vehicles/{asset}/report-cost', [VehicleController::class, 'reportCost'])->name('vehicles.report-cost');
     Route::get('vehicles/{asset}/maintenance/{maintenance}/download-surat', [VehicleController::class, 'downloadSuratPengantar'])->name('vehicles.download-surat');
+
+// Route Bengkel (di dalam Settings)
+    Route::prefix('settings')->name('settings.')->group(function() {
+        Route::get('/bengkel', [App\Http\Controllers\BengkelController::class, 'index'])->name('bengkel');
+        Route::post('/bengkel', [App\Http\Controllers\BengkelController::class, 'store'])->name('bengkel.store');
+        Route::put('/bengkel/{bengkel}', [App\Http\Controllers\BengkelController::class, 'update'])->name('bengkel.update');
+        Route::delete('/bengkel/{bengkel}', [App\Http\Controllers\BengkelController::class, 'destroy'])->name('bengkel.destroy');
+});
+
+// Route Vehicle Maintenance
+    Route::get('/vehicles/{asset}/maintenance/create', [App\Http\Controllers\VehicleController::class, 'createMaintenance'])->name('vehicles.maintenance.create');
+    Route::post('/vehicles/{asset}/maintenance', [App\Http\Controllers\VehicleController::class, 'storeMaintenance'])->name('vehicles.maintenance.store');
+    Route::delete('/vehicles/{asset}/maintenance/{maintenance}', [App\Http\Controllers\VehicleController::class, 'deleteMaintenance'])->name('vehicles.maintenance.delete');
+    Route::get('/vehicles/{asset}/maintenance/{maintenance}/surat-pengantar', [App\Http\Controllers\VehicleController::class, 'downloadSuratPengantar'])->name('vehicles.maintenance.surat-pengantar');
 });

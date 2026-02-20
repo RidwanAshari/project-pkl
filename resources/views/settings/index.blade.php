@@ -66,6 +66,14 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
+                        <a href="{{ route('settings.pemegang') }}" class="btn btn-primary">
+                            <i class="fas fa-users"></i> Kelola Pemegang Aset
+                        </a>
+
+                        <a href="{{ route('settings.bengkel') }}" class="btn btn-primary">
+                            <i class="fas fa-wrench"></i> Kelola Bengkel
+                        </a>
+
                         <form action="{{ route('settings.backup') }}" method="POST">
                             @csrf
                             <button type="submit" class="btn btn-success w-100" onclick="return confirm('Backup database sekarang?')">

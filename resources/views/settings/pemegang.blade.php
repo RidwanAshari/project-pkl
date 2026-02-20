@@ -1,16 +1,3 @@
-{{--
-    JAWABAN PERTANYAAN: "Gimana cara nambahin data nama pemegang aset sama jabatannya buat dropdownnya?"
-
-    Dropdown pemegang & jabatan di form tambah aset otomatis mengambil dari tabel USERS.
-    Jadi cara nambahin pemegang baru = tinggal daftarkan user baru lewat halaman REGISTER
-    atau bisa juga admin tambah langsung lewat tinker.
-
-    Tapi kalau mau ada halaman khusus "Kelola Pemegang Aset" di dalam web, 
-    bisa tambahkan route + controller + view berikut ini.
-    
-    Taruh file ini di: resources/views/settings/pemegang.blade.php
---}}
-
 @extends('layouts.app')
 
 @section('title', 'Kelola Pemegang Aset')
@@ -108,12 +95,21 @@
                         <label class="form-label">Jabatan</label>
                         <select name="position" class="form-select">
                             <option value="">-- Pilih Jabatan --</option>
-                            <option value="direktur">Direktur</option>
-                            <option value="manager">Manager</option>
-                            <option value="supervisor">Supervisor</option>
-                            <option value="staff">Staff</option>
-                            <option value="admin">Admin</option>
-                            <option value="operator">Operator</option>
+                            <option value="Direktur Utama">Direktur Utama</option>
+                            <option value="Direktur">Direktur</option>
+                            <option value="Ka Sub Bag Umum & PDE">Ka Sub Bag Umum &amp; PDE</option>
+                            <option value="Ka Sub Bag Keuangan">Ka Sub Bag Keuangan</option>
+                            <option value="Ka Sub Bag SDM">Ka Sub Bag SDM</option>
+                            <option value="Ka Sub Unit Banjarnegoro">Ka Sub Unit Banjarnegoro</option>
+                            <option value="Ka Sub Unit Mertoyudan">Ka Sub Unit Mertoyudan</option>
+                            <option value="Ka Sub Unit Muntilan">Ka Sub Unit Muntilan</option>
+                            <option value="Ka Sub Unit Grabag">Ka Sub Unit Grabag</option>
+                            <option value="Plt. Ka Sub Unit Banjarnegoro">Plt. Ka Sub Unit Banjarnegoro</option>
+                            <option value="Plt. Ka Sub Unit Mertoyudan">Plt. Ka Sub Unit Mertoyudan</option>
+                            <option value="Staf Umum">Staf Umum</option>
+                            <option value="Staf Keuangan">Staf Keuangan</option>
+                            <option value="Staf Teknik">Staf Teknik</option>
+                            <option value="Bagian Pengadaan">Bagian Pengadaan</option>
                         </select>
                     </div>
                     <div class="mb-3">
@@ -166,12 +162,21 @@
                         <label class="form-label">Jabatan</label>
                         <select name="position" id="edit-position" class="form-select">
                             <option value="">-- Pilih Jabatan --</option>
-                            <option value="direktur">Direktur</option>
-                            <option value="manager">Manager</option>
-                            <option value="supervisor">Supervisor</option>
-                            <option value="staff">Staff</option>
-                            <option value="admin">Admin</option>
-                            <option value="operator">Operator</option>
+                            <option value="Direktur Utama">Direktur Utama</option>
+                            <option value="Direktur">Direktur</option>
+                            <option value="Ka Sub Bag Umum & PDE">Ka Sub Bag Umum &amp; PDE</option>
+                            <option value="Ka Sub Bag Keuangan">Ka Sub Bag Keuangan</option>
+                            <option value="Ka Sub Bag SDM">Ka Sub Bag SDM</option>
+                            <option value="Ka Sub Unit Banjarnegoro">Ka Sub Unit Banjarnegoro</option>
+                            <option value="Ka Sub Unit Mertoyudan">Ka Sub Unit Mertoyudan</option>
+                            <option value="Ka Sub Unit Muntilan">Ka Sub Unit Muntilan</option>
+                            <option value="Ka Sub Unit Grabag">Ka Sub Unit Grabag</option>
+                            <option value="Plt. Ka Sub Unit Banjarnegoro">Plt. Ka Sub Unit Banjarnegoro</option>
+                            <option value="Plt. Ka Sub Unit Mertoyudan">Plt. Ka Sub Unit Mertoyudan</option>
+                            <option value="Staf Umum">Staf Umum</option>
+                            <option value="Staf Keuangan">Staf Keuangan</option>
+                            <option value="Staf Teknik">Staf Teknik</option>
+                            <option value="Bagian Pengadaan">Bagian Pengadaan</option>
                         </select>
                     </div>
                     <div class="mb-3">

@@ -11,7 +11,6 @@ class Asset extends Model
 
     protected $fillable = [
         'kode_aset',
-        'tipe_dashboard',   // <-- TAMBAHAN BARU
         'nama_aset',
         'kategori',
         'merk',
@@ -21,26 +20,18 @@ class Asset extends Model
         'kondisi',
         'lokasi',
         'pemegang_saat_ini',
+        'jabatan_pemegang',   // untuk berita acara penerimaan awal
+        'alamat_pemegang',    // untuk berita acara penerimaan awal
+        'nipp_pemegang',      // untuk berita acara penerimaan awal
         'keterangan',
         'foto',
-        'qr_code'
-    ];
-
-    protected $casts = [
-        'tahun_perolehan' => 'integer',
-        'nilai_perolehan' => 'decimal:2',
-        'created_at'      => 'datetime',
-        'updated_at'      => 'datetime'
+        'qr_code',
+        'tipe_dashboard',
     ];
 
     public function histories()
     {
         return $this->hasMany(AssetHistory::class);
-    }
-
-    public function latestHistory()
-    {
-        return $this->hasOne(AssetHistory::class)->latest();
     }
 
     public function vehicleDetail()
