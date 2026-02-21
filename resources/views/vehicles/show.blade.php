@@ -252,10 +252,10 @@
         {{-- UPLOAD NOTA (HANYA JIKA SUDAH APPROVED DAN BELUM ADA NOTA) --}}
         @if($m->status_surat == 'approved' && !$m->file_nota)
 
-            <form action="{{ route('vehicles.uploadNota', $m->id) }}"
-                  method="POST"
-                  enctype="multipart/form-data"
-                  class="d-inline">
+            <form action="{{ route('vehicles.store-nota', [$asset->id, $m->id]) }}"
+      method="POST"
+      enctype="multipart/form-data"
+      class="d-inline">
                 @csrf
                 <input type="file"
                        name="file_nota"

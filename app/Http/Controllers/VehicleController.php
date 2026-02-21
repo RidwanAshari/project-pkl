@@ -72,7 +72,6 @@ class VehicleController extends Controller
     public function accSurat($id)
     {
         $maintenance = VehicleMaintenance::findOrFail($id);
-
         $maintenance->status_surat = 'approved';
         $maintenance->save();
 
@@ -85,7 +84,6 @@ class VehicleController extends Controller
     public function rejectSurat($id)
     {
         $maintenance = VehicleMaintenance::findOrFail($id);
-
         $maintenance->status_surat = 'rejected';
         $maintenance->save();
 
@@ -111,9 +109,7 @@ class VehicleController extends Controller
     // ===============================
     public function downloadSuratPengantar(Asset $asset, VehicleMaintenance $maintenance)
     {
-        if ($maintenance->asset_id !== $asset->id) {
-            abort(404);
-        }
+        if ($maintenance->asset_id !== $asset->id) abort(404);
 
         if ($maintenance->status_surat !== 'approved') {
             return back()->with('error', 'Surat belum di ACC Kabag!');
@@ -162,10 +158,7 @@ class VehicleController extends Controller
     // ===============================
     private function generateSuratPengantar($asset, $maintenance)
     {
-        $pdf = \PDF::loadView(
-            'vehicles.surat-pengantar',
-            compact('asset', 'maintenance')
-        );
+        $pdf = \PDF::loadView('vehicles.surat-pengantar', compact('asset', 'maintenance'));
 
         $filename = 'surat-pengantar-' . $maintenance->id . '.pdf';
         $path = 'surat-pengantar/' . $filename;
@@ -182,31 +175,93 @@ class VehicleController extends Controller
     public function deleteMaintenance(Asset $asset, VehicleMaintenance $maintenance)
     {
         $maintenance->delete();
-
         return back()->with('success', 'Data berhasil dihapus!');
     }
 
-    //up nota
-    public function uploadNota(Request $request, $id)
-{
-    $maintenance = VehicleMaintenance::findOrFail($id);
+    // ===============================
+    // NOTA: FORM UPLOAD (GET)
+    // ===============================
+    public function uploadNotaForm(Asset $asset, VehicleMaintenance $maintenance)
+    {
+        if ($maintenance->asset_id !== $asset->id) abort(404);
 
-    if ($maintenance->status_surat !== 'approved') {
-        return back()->with('error', 'Belum disetujui Kabag.');
+        if ($maintenance->status_surat !== 'approved') {
+            return back()->with('error', 'Belum disetujui Kabag.');
+        }
+
+        return view('vehicles.upload-nota', compact('asset', 'maintenance'));
     }
 
-    $request->validate([
-        'file_nota' => 'required|file|mimes:jpg,png,pdf|max:2048'
-    ]);
+    // ===============================
+    // NOTA: SIMPAN UPLOAD (POST)
+    // ===============================
+    public function storeNota(Request $request, Asset $asset, VehicleMaintenance $maintenance)
+    {
+        if ($maintenance->asset_id !== $asset->id) abort(404);
 
-    $path = $request->file('file_nota')
-                    ->store('nota_service', 'public');
+        if ($maintenance->status_surat !== 'approved') {
+            return back()->with('error', 'Belum disetujui Kabag.');
+        }
 
-    $maintenance->update([
-        'file_nota' => $path
-    ]);
+        $request->validate([
+            'file_nota' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048'
+        ]);
 
-    return back()->with('success', 'Nota berhasil diupload.');
-}
+        $path = $request->file('file_nota')->store('nota_service', 'public');
+        $maintenance->update(['file_nota' => $path]);
 
+        return redirect()->route('vehicles.show', $asset)
+            ->with('success', 'Nota berhasil diupload.');
+    }
+
+    // ===============================
+    // PROSES NOTA: FORM (GET)
+    // ===============================
+    public function processNotaForm(VehicleMaintenance $maintenance)
+    {
+        if (!$maintenance->file_nota) {
+            return back()->with('error', 'Nota belum diupload.');
+        }
+
+        return view('vehicles.process-nota', compact('maintenance'));
+    }
+
+    // ===============================
+    // PROSES NOTA: SIMPAN (POST)
+    // ===============================
+    public function processNota(Request $request, VehicleMaintenance $maintenance)
+    {
+        $request->validate([
+            'items' => 'required|array|min:1',
+            'items.*.nama' => 'required|string',
+            'items.*.harga' => 'required|numeric|min:0',
+            'keterangan' => 'nullable|string',
+            'dicetak_di' => 'nullable|string',
+        ]);
+
+        $payload = [
+            'items' => $request->items,
+            'keterangan' => $request->keterangan,
+            'dicetak_di' => $request->dicetak_di,
+        ];
+
+        $maintenance->nota = json_encode($payload);
+        $maintenance->dpb_status = 'approved';
+        $maintenance->save();
+
+        return redirect()->route('vehicles.printDpb', $maintenance->id)
+            ->with('success', 'DPB berhasil dibuat.');
+    }
+
+    // ===============================
+    // CETAK DPB (GET)
+    // ===============================
+    public function printDpb(VehicleMaintenance $maintenance)
+    {
+        if ($maintenance->dpb_status !== 'approved') {
+            return back()->with('error', 'DPB belum dibuat.');
+        }
+
+        return view('vehicles.print_dpb', compact('maintenance'));
+    }
 }
