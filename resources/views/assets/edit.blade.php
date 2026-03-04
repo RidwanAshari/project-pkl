@@ -45,7 +45,7 @@
                                     <option value="Tanah" {{ old('kategori', $asset->kategori) == 'Tanah' ? 'selected' : '' }}>Tanah</option>
                                     <option value="Kendaraan" {{ old('kategori', $asset->kategori) == 'Kendaraan' ? 'selected' : '' }}>Kendaraan</option>
                                     <option value="Peralatan" {{ old('kategori', $asset->kategori) == 'Peralatan' ? 'selected' : '' }}>Peralatan</option>
-                                    <option value="Investasi" {{ old('kategori', $asset->kategori) == 'Investasi' ? 'selected' : '' }}>Investasi</option>
+                                    <option value="Inventaris Barang dan Perabot Kantor" {{ old('kategori', $asset->kategori) == 'Inventaris Barang dan Perabot Kantor' ? 'selected' : '' }}>Inventaris Barang dan Perabot Kantor</option>
                                 </select>
                                 @error('kategori')
                                     <div class="invalid-feedback">{{ $message }}</div>

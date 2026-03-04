@@ -20,8 +20,9 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Kode Aset <span class="text-danger">*</span></label>
-                                <input type="text" name="kode_aset" class="form-control @error('kode_aset') is-invalid @enderror" value="{{ old('kode_aset') }}" required>
+                                <label class="form-label">Kode Aset</label>
+                                <input type="text" name="kode_aset" class="form-control @error('kode_aset') is-invalid @enderror" value="{{ old('kode_aset') }}" placeholder="Kosongkan untuk auto-generate">
+                                <small class="text-muted">Biarkan kosong untuk kode otomatis.</small>
                                 @error('kode_aset')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -44,7 +45,7 @@
                                     <option value="Tanah" {{ old('kategori') == 'Tanah' ? 'selected' : '' }}>Tanah</option>
                                     <option value="Kendaraan" {{ old('kategori') == 'Kendaraan' ? 'selected' : '' }}>Kendaraan</option>
                                     <option value="Peralatan" {{ old('kategori') == 'Peralatan' ? 'selected' : '' }}>Peralatan</option>
-                                    <option value="Investasi" {{ old('kategori') == 'Investasi' ? 'selected' : '' }}>Investasi</option>
+                                    <option value="Inventaris Barang dan Perabot Kantor" {{ old('kategori') == 'Inventaris Barang dan Perabot Kantor' ? 'selected' : '' }}>Inventaris Barang dan Perabot Kantor</option>
                                 </select>
                                 @error('kategori')
                                     <div class="invalid-feedback">{{ $message }}</div>
@@ -191,15 +192,11 @@
                             </div>
 
                             <div class="row mb-3">
-                                <div class="col-md-4">
-                                    <label class="form-label">Model</label>
-                                    <input type="text" name="model" class="form-control" value="{{ old('model') }}">
-                                </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label">Tahun Pembuatan</label>
                                     <input type="number" name="tahun_pembuatan" class="form-control" value="{{ old('tahun_pembuatan') }}">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label">Isi Silinder</label>
                                     <input type="text" name="isi_silinder" class="form-control" placeholder="Contoh: 1500 CC" value="{{ old('isi_silinder') }}">
                                 </div>

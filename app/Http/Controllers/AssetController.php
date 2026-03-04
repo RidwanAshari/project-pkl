@@ -6,7 +6,6 @@ use App\Models\Asset;
 use App\Models\AssetHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Models\User;
 
 class AssetController extends Controller
@@ -14,28 +13,19 @@ class AssetController extends Controller
     public function index(Request $request)
     {
         $query = Asset::where('tipe_dashboard', 'aset');
-
-        if ($request->filled('kategori')) {
-            $query->where('kategori', $request->kategori);
-        }
-        if ($request->filled('kondisi')) {
-            $query->where('kondisi', $request->kondisi);
-        }
-        // Filter berdasarkan nama pemegang (dropdown)
-        if ($request->filled('pemegang')) {
-            $query->where('pemegang_saat_ini', $request->pemegang);
-        }
+        if ($request->filled('kategori')) $query->where('kategori', $request->kategori);
+        if ($request->filled('kondisi'))  $query->where('kondisi', $request->kondisi);
+        if ($request->filled('pemegang')) $query->where('pemegang_saat_ini', $request->pemegang);
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('kode_aset', 'like', "%{$search}%")
-                  ->orWhere('nama_aset', 'like', "%{$search}%")
-                  ->orWhere('pemegang_saat_ini', 'like', "%{$search}%");
+                $q->where('kode_aset','like',"%{$search}%")
+                  ->orWhere('nama_aset','like',"%{$search}%")
+                  ->orWhere('pemegang_saat_ini','like',"%{$search}%");
             });
         }
-
         $assets = $query->latest()->paginate(10);
-        $users  = User::orderBy('name')->get(); // untuk dropdown filter pemegang
+        $users  = User::orderBy('name')->get();
         return view('assets.index', compact('assets', 'users'));
     }
 
@@ -48,70 +38,66 @@ class AssetController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'kode_aset'        => 'required|unique:assets',
+            'kode_aset'        => 'nullable',
             'nama_aset'        => 'required',
             'kategori'         => 'required|in:Bangunan,Tanah,Kendaraan,Peralatan,Inventaris Barang dan Perabot Kantor',
-            'merk'             => 'nullable',
-            'tipe'             => 'nullable',
+            'merk'             => 'nullable','tipe'=>'nullable',
             'tahun_perolehan'  => 'required|integer',
             'nilai_perolehan'  => 'required|numeric',
             'kondisi'          => 'required|in:Baik,Rusak Ringan,Rusak Berat',
             'lokasi'           => 'required',
-            'pemegang_saat_ini'=> 'nullable',
-            'keterangan'       => 'nullable',
+            'pemegang_saat_ini'=> 'nullable','keterangan'=>'nullable',
             'foto'             => 'nullable|image|max:2048',
-            'nama_pemilik'     => 'nullable|string',
-            'jabatan'          => 'nullable|string',
-            'alamat'           => 'nullable|string',
-            'nomor_plat'       => 'nullable|string',
-            'model'            => 'nullable|string',
-            'tahun_pembuatan'  => 'nullable|integer',
-            'isi_silinder'     => 'nullable|string',
-            'nomor_rangka'     => 'nullable|string',
-            'nomor_mesin'      => 'nullable|string',
-            'warna'            => 'nullable|string',
-            'bahan_bakar'      => 'nullable|string',
-            'warna_tnkb'       => 'nullable|string',
-            'tahun_registrasi' => 'nullable|integer',
-            'nomor_bpkb'       => 'nullable|string',
-            'tanggal_berlaku'  => 'nullable|date',
-            'bulan_berlaku'    => 'nullable|string',
-            'tahun_berlaku'    => 'nullable|string',
-            'berat'            => 'nullable|numeric',
-            'sumbu'            => 'nullable|integer',
-            'penumpang'        => 'nullable|integer',
+            'nomor_plat'       => 'nullable|string','model'=>'nullable|string',
+            'tahun_pembuatan'  => 'nullable|integer','isi_silinder'=>'nullable|string',
+            'nomor_rangka'     => 'nullable|string','nomor_mesin'=>'nullable|string',
+            'warna'            => 'nullable|string','bahan_bakar'=>'nullable|string',
+            'warna_tnkb'       => 'nullable|string','tahun_registrasi'=>'nullable|integer',
+            'nomor_bpkb'       => 'nullable|string','tanggal_berlaku'=>'nullable|date',
+            'bulan_berlaku'    => 'nullable|string','tahun_berlaku'=>'nullable|string',
+            'berat'            => 'nullable|numeric','sumbu'=>'nullable|integer','penumpang'=>'nullable|integer',
         ]);
 
-        if ($request->hasFile('foto')) {
-            $validated['foto'] = $request->file('foto')->store('assets', 'public');
+        if (empty($validated['kode_aset'])) {
+            $prefix = match($validated['kategori']) {
+                'Kendaraan' => 'KND', 'Bangunan' => 'GDG', 'Tanah' => 'TNH', default => 'AST',
+            };
+            $last = Asset::where('kode_aset','like',$prefix.'-%')->orderByDesc('kode_aset')->first();
+            $num  = $last ? ((int)substr($last->kode_aset, strlen($prefix)+1))+1 : 1;
+            $validated['kode_aset'] = $prefix.'-'.str_pad($num,4,'0',STR_PAD_LEFT);
         }
 
-        $qrCode = \QrCode::format('svg')->size(200)->errorCorrection('H')->generate($validated['kode_aset']);
-        $qrPath = 'qrcodes/' . $validated['kode_aset'] . '.svg';
+        if (Asset::where('kode_aset',$validated['kode_aset'])->exists())
+            return back()->withErrors(['kode_aset'=>'Kode aset sudah digunakan.'])->withInput();
+
+        if ($request->hasFile('foto'))
+            $validated['foto'] = $request->file('foto')->store('assets','public');
+
+        $qrUrl  = route('assets.qr-redirect', $validated['kode_aset']);
+        $qrCode = \QrCode::format('svg')->size(200)->errorCorrection('H')->generate($qrUrl);
+        $qrPath = 'qrcodes/'.$validated['kode_aset'].'.svg';
         Storage::disk('public')->put($qrPath, $qrCode);
         $validated['qr_code'] = $qrPath;
 
         $assetData = collect($validated)->only([
-            'kode_aset', 'nama_aset', 'kategori', 'merk', 'tipe',
-            'tahun_perolehan', 'nilai_perolehan', 'kondisi', 'lokasi',
-            'pemegang_saat_ini', 'keterangan', 'foto', 'qr_code'
+            'kode_aset','nama_aset','kategori','merk','tipe',
+            'tahun_perolehan','nilai_perolehan','kondisi','lokasi',
+            'pemegang_saat_ini','keterangan','foto','qr_code'
         ])->toArray();
-        $assetData['tipe_dashboard']    = 'aset';
-        $assetData['jabatan_pemegang']  = $request->jabatan_pemegang;
-        $assetData['alamat_pemegang']   = $request->alamat_pemegang;
-        $assetData['nipp_pemegang']     = $request->nipp_pemegang;
+        $assetData['tipe_dashboard']   = 'aset';
+        $assetData['jabatan_pemegang'] = $request->jabatan_pemegang;
+        $assetData['alamat_pemegang']  = $request->alamat_pemegang;
+        $assetData['nipp_pemegang']    = $request->nipp_pemegang;
 
         $asset = Asset::create($assetData);
 
         if ($validated['kategori'] === 'Kendaraan') {
-            // Ambil nama/jabatan/alamat dari pemegang_saat_ini, bukan dari Detail Kendaraan
             $vehicleData = collect($validated)->only([
-                'nomor_plat', 'model', 'tahun_pembuatan', 'isi_silinder',
-                'nomor_rangka', 'nomor_mesin', 'warna', 'bahan_bakar',
-                'warna_tnkb', 'tahun_registrasi', 'nomor_bpkb', 'tanggal_berlaku',
-                'bulan_berlaku', 'tahun_berlaku', 'berat', 'sumbu', 'penumpang'
+                'nomor_plat','model','tahun_pembuatan','isi_silinder',
+                'nomor_rangka','nomor_mesin','warna','bahan_bakar',
+                'warna_tnkb','tahun_registrasi','nomor_bpkb','tanggal_berlaku',
+                'bulan_berlaku','tahun_berlaku','berat','sumbu','penumpang'
             ])->filter()->toArray();
-
             if (!empty($vehicleData)) {
                 $vehicleData['asset_id']     = $asset->id;
                 $vehicleData['nama_pemilik'] = $asset->pemegang_saat_ini;
@@ -134,12 +120,12 @@ class AssetController extends Controller
             ]);
         }
 
-        return redirect()->route('assets.index')->with('success', 'Aset berhasil ditambahkan!');
+        return redirect()->route('assets.index')->with('success','Aset berhasil ditambahkan! Kode: '.$asset->kode_aset);
     }
 
     public function show(Asset $asset)
     {
-        $asset->load('histories');
+        $asset->load(['histories', 'changeLogs']);
         return view('assets.show', compact('asset'));
     }
 
@@ -152,46 +138,95 @@ class AssetController extends Controller
     public function update(Request $request, Asset $asset)
     {
         $validated = $request->validate([
-            'kode_aset'        => 'required|unique:assets,kode_aset,' . $asset->id,
+            'kode_aset'        => 'nullable|unique:assets,kode_aset,'.$asset->id,
             'nama_aset'        => 'required',
             'kategori'         => 'required|in:Bangunan,Tanah,Kendaraan,Peralatan,Inventaris Barang dan Perabot Kantor',
-            'merk'             => 'nullable',
-            'tipe'             => 'nullable',
+            'merk'             => 'nullable','tipe'=>'nullable',
             'tahun_perolehan'  => 'required|integer',
             'nilai_perolehan'  => 'required|numeric',
             'kondisi'          => 'required|in:Baik,Rusak Ringan,Rusak Berat',
             'lokasi'           => 'required',
-            'pemegang_saat_ini'=> 'nullable',
-            'keterangan'       => 'nullable',
+            'pemegang_saat_ini'=> 'nullable','keterangan'=>'nullable',
             'foto'             => 'nullable|image|max:2048'
         ]);
 
+        if (empty($validated['kode_aset'])) unset($validated['kode_aset']);
+
         if ($request->hasFile('foto')) {
             if ($asset->foto) Storage::disk('public')->delete($asset->foto);
-            $validated['foto'] = $request->file('foto')->store('assets', 'public');
+            $validated['foto'] = $request->file('foto')->store('assets','public');
+        }
+
+        // Tracking perubahan
+        $tracked = \App\Models\Asset::$trackedFields;
+        foreach ($tracked as $field => $label) {
+            $oldVal = $asset->getOriginal($field);
+            $newVal = $validated[$field] ?? $asset->$field;
+            if ((string)$oldVal !== (string)$newVal) {
+                \App\Models\AssetChangeLog::create([
+                    'asset_id'    => $asset->id,
+                    'field_name'  => $field,
+                    'field_label' => $label,
+                    'old_value'   => $oldVal,
+                    'new_value'   => $newVal,
+                    'changed_by'  => auth()->user()->name,
+                ]);
+            }
         }
 
         $asset->update($validated);
-        return redirect()->route('assets.show', $asset)->with('success', 'Aset berhasil diupdate!');
+        return redirect()->route('assets.show', $asset)->with('success','Aset berhasil diupdate!');
     }
 
-    public function destroy(Asset $asset)
+    public function destroy(Request $request, Asset $asset)
     {
+        \DB::table('assets')->where('id',$asset->id)->update([
+            'alasan_hapus' => $request->alasan_hapus ?? 'Dihapus oleh pengguna',
+            'dihapus_oleh' => auth()->user()->name,
+        ]);
+        $asset->delete();
+        return redirect()->route('assets.index')->with('success','Aset dipindahkan ke Aset Dihapus.');
+    }
+
+    // ===== TRASH / ASET DIHAPUS =====
+    public function trash(Request $request)
+    {
+        $query = Asset::onlyTrashed();
+        if ($request->filled('tipe'))     $query->where('tipe_dashboard', $request->tipe);
+        if ($request->filled('kategori')) $query->where('kategori', $request->kategori);
+        if ($request->filled('search')) {
+            $s = $request->search;
+            $query->where(fn($q) => $q->where('kode_aset','like',"%$s%")->orWhere('nama_aset','like',"%$s%"));
+        }
+        $assets = $query->latest('deleted_at')->paginate(15);
+        return view('assets.trash', compact('assets'));
+    }
+
+    public function restore($id)
+    {
+        $asset = Asset::onlyTrashed()->findOrFail($id);
+        $asset->restore();
+        $asset->update(['alasan_hapus'=>null,'dihapus_oleh'=>null]);
+        return back()->with('success','Aset '.$asset->nama_aset.' berhasil dipulihkan!');
+    }
+
+    public function forceDelete($id)
+    {
+        $asset = Asset::onlyTrashed()->findOrFail($id);
         if ($asset->foto) Storage::disk('public')->delete($asset->foto);
         if ($asset->qr_code) Storage::disk('public')->delete($asset->qr_code);
-        $asset->delete();
-        return redirect()->route('assets.index')->with('success', 'Aset berhasil dihapus!');
+        $asset->forceDelete();
+        return back()->with('success','Aset berhasil dihapus permanen.');
     }
 
+    // ===== TRANSFER, STICKER, QR, dll =====
     public function transfer(Request $request, Asset $asset)
     {
         $validated = $request->validate([
             'ke_pemegang'          => 'required',
             'tanggal_serah_terima' => 'required|date',
-            'jabatan_dari'         => 'nullable|string',
-            'jabatan_ke'           => 'nullable|string',
-            'nipp_dari'            => 'nullable|string',
-            'nipp_ke'              => 'nullable|string',
+            'jabatan_dari'         => 'nullable|string','jabatan_ke'=>'nullable|string',
+            'nipp_dari'            => 'nullable|string','nipp_ke'=>'nullable|string',
             'keterangan'           => 'nullable'
         ]);
 
@@ -209,7 +244,7 @@ class AssetController extends Controller
         ]);
 
         $asset->update(['pemegang_saat_ini' => $validated['ke_pemegang']]);
-        return redirect()->route('assets.show', $asset)->with('success', 'Transfer berhasil! Nomor BA: ' . $history->nomor_ba);
+        return redirect()->route('assets.show',$asset)->with('success','Transfer berhasil! Nomor BA: '.$history->nomor_ba);
     }
 
     public function printSticker(Asset $asset)
@@ -219,60 +254,36 @@ class AssetController extends Controller
 
     public function qrRedirect($kode_aset)
     {
-        $asset = Asset::where('kode_aset', $kode_aset)->firstOrFail();
-        if ($asset->kategori === 'Kendaraan') {
-            return redirect()->route('vehicles.show', $asset);
-        }
-        return redirect()->route('assets.show', $asset);
+        $asset = Asset::where('kode_aset',$kode_aset)->firstOrFail();
+        return $asset->kategori === 'Kendaraan'
+            ? redirect()->route('vehicles.show', $asset)
+            : redirect()->route('assets.show', $asset);
     }
 
     public function downloadBA(AssetHistory $history)
     {
         $asset    = $history->asset;
-        $pdf      = \PDF::loadView('assets.berita-acara', compact('asset', 'history'));
-        $filename = 'BA_' . str_replace('/', '-', $history->nomor_ba) . '.pdf';
+        $pdf      = \PDF::loadView('assets.berita-acara', compact('asset','history'));
+        $filename = 'BA_'.str_replace('/','_',$history->nomor_ba).'.pdf';
         return $pdf->download($filename);
     }
 
-    // Export Excel untuk Data Aset
     public function exportExcel(Request $request)
     {
-        $query = Asset::where('tipe_dashboard', 'aset');
-        if ($request->filled('kategori')) $query->where('kategori', $request->kategori);
-        if ($request->filled('kondisi'))  $query->where('kondisi', $request->kondisi);
-        if ($request->filled('pemegang')) $query->where('pemegang_saat_ini', $request->pemegang);
-
-        $assets = $query->get();
-
-        $filename = 'Data_Aset_' . date('Ymd_His') . '.csv';
-
-        $headers = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-        ];
-
+        $query = Asset::where('tipe_dashboard','aset');
+        if ($request->filled('kategori')) $query->where('kategori',$request->kategori);
+        if ($request->filled('kondisi'))  $query->where('kondisi',$request->kondisi);
+        if ($request->filled('pemegang')) $query->where('pemegang_saat_ini',$request->pemegang);
+        $assets   = $query->get();
+        $filename = 'Data_Aset_'.date('Ymd_His').'.csv';
+        $headers  = ['Content-Type'=>'text/csv','Content-Disposition'=>'attachment; filename="'.$filename.'"'];
         $callback = function() use ($assets) {
-            $file = fopen('php://output', 'w');
-            // Header kolom
-            fputcsv($file, ['Kode Aset', 'Nama Aset', 'Kategori', 'Merk', 'Tipe', 'Tahun Perolehan', 'Nilai Perolehan', 'Kondisi', 'Lokasi', 'Pemegang Saat Ini', 'Keterangan']);
-            foreach ($assets as $asset) {
-                fputcsv($file, [
-                    $asset->kode_aset,
-                    $asset->nama_aset,
-                    $asset->kategori,
-                    $asset->merk,
-                    $asset->tipe,
-                    $asset->tahun_perolehan,
-                    $asset->nilai_perolehan,
-                    $asset->kondisi,
-                    $asset->lokasi,
-                    $asset->pemegang_saat_ini,
-                    $asset->keterangan,
-                ]);
-            }
+            $file = fopen('php://output','w');
+            fputcsv($file,['Kode Aset','Nama Aset','Kategori','Merk','Tipe','Tahun Perolehan','Nilai Perolehan','Kondisi','Lokasi','Pemegang Saat Ini','Keterangan']);
+            foreach ($assets as $a)
+                fputcsv($file,[$a->kode_aset,$a->nama_aset,$a->kategori,$a->merk,$a->tipe,$a->tahun_perolehan,$a->nilai_perolehan,$a->kondisi,$a->lokasi,$a->pemegang_saat_ini,$a->keterangan]);
             fclose($file);
         };
-
         return response()->stream($callback, 200, $headers);
     }
 }

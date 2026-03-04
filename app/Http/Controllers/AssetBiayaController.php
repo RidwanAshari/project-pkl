@@ -38,7 +38,7 @@ class AssetBiayaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'kode_aset'        => 'required|unique:assets',
+            'kode_aset'        => 'nullable|unique:assets',
             'nama_aset'        => 'required',
             'kategori'         => 'required|in:Bangunan,Tanah,Kendaraan,Peralatan,Inventaris Barang dan Perabot Kantor',
             'merk'             => 'nullable',
@@ -68,8 +68,18 @@ class AssetBiayaController extends Controller
             $validated['foto'] = $request->file('foto')->store('assets', 'public');
         }
 
-        // Generate QR Code (sama seperti AssetController)
-        $qrCode = \QrCode::format('svg')->size(200)->errorCorrection('H')->generate($validated['kode_aset']);
+        // Auto-generate kode_aset jika kosong
+        if (empty($validated['kode_aset'])) {
+            $prefix = match($validated['kategori']) {
+                'Kendaraan' => 'KND', 'Bangunan' => 'GDG', 'Tanah' => 'TNH', default => 'AST',
+            };
+            $last = Asset::withTrashed()->where('kode_aset','like',$prefix.'-%')->orderByDesc('kode_aset')->first();
+            $num  = $last ? ((int)substr($last->kode_aset, strlen($prefix)+1))+1 : 1;
+            $validated['kode_aset'] = $prefix.'-'.str_pad($num,4,'0',STR_PAD_LEFT);
+        }
+        // Generate QR Code
+        $qrUrl  = route('qr.redirect', $validated['kode_aset']);
+        $qrCode = \QrCode::format('svg')->size(200)->errorCorrection('H')->generate($qrUrl);
         $qrPath = 'qrcodes/' . $validated['kode_aset'] . '.svg';
         \Illuminate\Support\Facades\Storage::disk('public')->put($qrPath, $qrCode);
 
@@ -131,7 +141,7 @@ class AssetBiayaController extends Controller
     public function update(Request $request, Asset $asset)
     {
         $validated = $request->validate([
-            'kode_aset'        => 'required|unique:assets,kode_aset,' . $asset->id,
+            'kode_aset'        => 'nullable|unique:assets,kode_aset,' . $asset->id,
             'nama_aset'        => 'required',
             'kategori'         => 'required|in:Bangunan,Tanah,Kendaraan,Peralatan,Inventaris Barang dan Perabot Kantor',
             'merk'             => 'nullable',
@@ -150,15 +160,36 @@ class AssetBiayaController extends Controller
             $validated['foto'] = $request->file('foto')->store('assets', 'public');
         }
         $validated['pemegang_saat_ini'] = $request->pemegang_saat_ini;
+        $tracked = \App\Models\Asset::$trackedFields;
+        foreach ($tracked as $field => $label) {
+            $oldVal = $asset->getOriginal($field);
+            $newVal = $validated[$field] ?? $asset->$field;
+            if ((string)$oldVal !== (string)$newVal) {
+                \App\Models\AssetChangeLog::create([
+                    'asset_id'    => $asset->id,
+                    'field_name'  => $field,
+                    'field_label' => $label,
+                    'old_value'   => $oldVal,
+                    'new_value'   => $newVal,
+                    'changed_by'  => auth()->user()->name,
+                ]);
+            }
+        }   
+        
         $asset->update($validated);
         return redirect()->route('assets-biaya.index')->with('success', 'Aset Biaya berhasil diupdate!');
     }
 
-    public function destroy(Asset $asset)
+    public function destroy(Request $request, Asset $asset)
     {
-        if ($asset->foto) Storage::disk('public')->delete($asset->foto);
-        $asset->delete();
-        return redirect()->route('assets-biaya.index')->with('success', 'Aset Biaya berhasil dihapus!');
+        // Update kolom soft delete info dulu pakai DB langsung
+        \DB::table('assets')->where('id', $asset->id)->update([
+        'alasan_hapus' => 'Dihapus oleh pengguna',
+        'dihapus_oleh' => auth()->user()->name,
+        ]);
+        $asset->delete(); // soft delete
+        return redirect()->route('assets-biaya.index')
+            ->with('success', 'Aset dipindahkan ke Aset Dihapus.');
     }
 
     public function exportExcel(Request $request)

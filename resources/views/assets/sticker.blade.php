@@ -2,179 +2,97 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stiker Aset - {{ $asset->kode_aset }}</title>
+    <title>Stiker - {{ $asset->kode_aset }}</title>
     <style>
-        @page {
-            size: 10cm 5cm;
-            margin: 0;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: Arial, sans-serif;
-            padding: 0.5cm;
-        }
+        @page { size: 10cm 5cm; margin: 0; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: white; }
 
         .sticker {
-            width: 9cm;
-            height: 4cm;
-            border: 2px solid #333;
-            padding: 0.3cm;
-            display: flex;
-            gap: 0.3cm;
+            width: 10cm; height: 5cm;
+            border: 2px solid #222;
+            display: table;
+            table-layout: fixed;
         }
-
-        .qr-section {
-            width: 3cm;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        .qr-col {
+            display: table-cell;
+            width: 4cm;
+            vertical-align: middle;
+            text-align: center;
+            border-right: 1px solid #aaa;
+            padding: 4px;
         }
-
-        .qr-section img {
-            width: 2.5cm;
-            height: 2.5cm;
+        .qr-col img { width: 3.2cm; height: 3.2cm; display: block; margin: 0 auto; }
+        .qr-col p { font-size: 5.5pt; color: #666; margin-top: 2px; }
+        .info-col {
+            display: table-cell;
+            vertical-align: top;
+            padding: 6px 8px;
         }
-
-        .info-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
         .header {
             text-align: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 0.2cm;
-            margin-bottom: 0.2cm;
+            border-bottom: 1.5px solid #333;
+            padding-bottom: 4px;
+            margin-bottom: 5px;
         }
+        .header h3 { font-size: 11pt; font-weight: bold; letter-spacing: 1px; }
+        .header p  { font-size: 7pt; color: #555; }
+        .field { margin-bottom: 3px; }
+        .label { font-size: 7pt; color: #777; }
+        .value { font-size: 10pt; font-weight: bold; line-height: 1.2; }
+        .footer { font-size: 6.5pt; color: #888; margin-top: 4px; text-align: center; }
 
-        .header h3 {
-            font-size: 14pt;
-            margin: 0;
-        }
-
-        .header p {
-            font-size: 8pt;
-            margin: 0;
-        }
-
-        .content {
-            flex: 1;
-        }
-
-        .field {
-            margin-bottom: 0.15cm;
-        }
-
-        .field .label {
-            font-size: 8pt;
-            color: #666;
-        }
-
-        .field .value {
-            font-size: 11pt;
-            font-weight: bold;
-        }
-
-        .footer {
-            text-align: center;
-            font-size: 7pt;
-            color: #666;
-            border-top: 1px solid #ddd;
-            padding-top: 0.1cm;
-        }
-
-        @media print {
-            body {
-                padding: 0;
-            }
-            
-            .no-print {
-                display: none;
-            }
-        }
-
-        .print-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 10px 20px;
-            background: #4e73df;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .print-button:hover {
-            background: #224abe;
-        }
+        .no-print { margin: 16px; }
+        @media print { .no-print { display: none !important; } body { margin: 0; } }
     </style>
 </head>
 <body>
-    <button onclick="window.print()" class="print-button no-print">
-        🖨️ Cetak Stiker
-    </button>
-
-    <div class="sticker">
-        <div class="qr-section">
-            @if($asset->qr_code)
-                <img src="{{ asset('storage/' . $asset->qr_code) }}" alt="QR Code">
-            @else
-                <div style="width: 2.5cm; height: 2.5cm; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 8pt;">
-                    No QR
-                </div>
-            @endif
-        </div>
-
-        <div class="info-section">
-            <div class="header">
-                <h3>ASET KANTOR</h3>
-                <p>Sistem Manajemen Aset</p>
-            </div>
-
-            <div class="content">
-                <div class="field">
-                    <div class="label">Kode Aset:</div>
-                    <div class="value">{{ $asset->kode_aset }}</div>
-                </div>
-
-                <div class="field">
-                    <div class="label">Nama Aset:</div>
-                    <div class="value">{{ Str::limit($asset->nama_aset, 30) }}</div>
-                </div>
-
-                <div class="field">
-                    <div class="label">Kategori:</div>
-                    <div class="value">{{ $asset->kategori }}</div>
-                </div>
-
-                <div class="field">
-                    <div class="label">Tahun:</div>
-                    <div class="value">{{ $asset->tahun_perolehan }}</div>
-                </div>
-            </div>
-
-            <div class="footer">
-                Scan QR Code untuk info lengkap
-            </div>
-        </div>
+    <div class="no-print">
+        <button onclick="window.print()" style="padding:8px 20px;background:#4e73df;color:white;border:none;border-radius:5px;cursor:pointer;font-size:13px;">
+            🖨️ Cetak Stiker
+        </button>
+        <a href="{{ url()->previous() }}" style="margin-left:8px;padding:8px 16px;background:#6c757d;color:white;text-decoration:none;border-radius:5px;font-size:13px;">← Kembali</a>
     </div>
 
-    <script>
-        // Auto print saat halaman load (opsional)
-        // window.onload = function() { window.print(); }
-    </script>
+    <div class="sticker">
+        {{-- Kolom QR Code --}}
+        <div class="qr-col">
+            @if($asset->qr_code)
+                {{-- QR code mengarah ke URL detail aset --}}
+                @php
+                    $qrUrl = $asset->kategori === 'Kendaraan'
+                        ? route('vehicles.show', $asset)
+                        : route('assets.show', $asset);
+                    // Generate QR baru yang mengarah ke URL
+                    $qrSvg = \QrCode::format('svg')->size(120)->errorCorrection('H')->generate($qrUrl);
+                @endphp
+                <img src="data:image/svg+xml;base64,{{ base64_encode($qrSvg) }}" alt="QR Code">
+            @else
+                <div style="width:3.2cm;height:3.2cm;border:1px solid #ccc;display:flex;align-items:center;justify-content:center;font-size:7pt;color:#999;">No QR</div>
+            @endif
+            <p>Scan untuk detail</p>
+        </div>
+
+        {{-- Kolom Info --}}
+        <div class="info-col">
+            <div class="header">
+                <h3>ASET KANTOR</h3>
+                <p>Perumda Air Minum Tirta Gemilang</p>
+            </div>
+            <div class="field">
+                <div class="label">Kode Aset:</div>
+                <div class="value">{{ $asset->kode_aset }}</div>
+            </div>
+            <div class="field">
+                <div class="label">Nama Aset:</div>
+                <div class="value" style="font-size:9pt;">{{ Str::limit($asset->nama_aset, 28) }}</div>
+            </div>
+            <div class="field">
+                <div class="label">Kategori:</div>
+                <div class="value" style="font-size:9pt;">{{ $asset->kategori }}</div>
+            </div>
+            <div class="footer">Scan QR Code untuk info lengkap</div>
+        </div>
+    </div>
 </body>
 </html>
